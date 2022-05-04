@@ -10,8 +10,10 @@ class DiscordHandler(logging.StreamHandler):
         super().__init__()
         config = AutoConfig(search_path=getcwd())
         self.url: str = str(
-            config("LOGGING_DISCORD_WEBHOOK", "http://example.com")
+            config("LOGGING_DISCORD_WEBHOOK", "BAD_URL")
         )
+        if self.url == "BAD_URL":
+            print("START UP ERROR : LOGGING_DISCORD_WEBHOOK is not available.")
 
     def emit(self, record):
         msg = self.format(record)
