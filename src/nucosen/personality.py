@@ -6,6 +6,9 @@ from requests import get
 from requests.exceptions import ConnectionError, HTTPError
 from retry import retry
 
+import quote
+from sessionCookie import Session
+
 
 class RetryRequested(Exception):
     pass
@@ -27,7 +30,7 @@ def choiceFromRequests(requests: List[str], max: int) -> Optional[List[str]]:
 
 
 @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
-def randomSelection(tags: List[str]) -> str:
+def randomSelection(tags: List[str], session: Session) -> str:
     url = "https://api.search.nicovideo.jp/api/v2/snapshot/video/contents/search"
     header = {
         "UserAgent": "NUCOSen Broadcast Personality System"
@@ -52,11 +55,15 @@ def randomSelection(tags: List[str]) -> str:
     response = get(url, headers=header, params=payload)
     result = dict(response.json())
     response.raise_for_status()
-    winner: List[str] = []
+    winners: List[str] = []
     for target in result['data']:
         if not target["contentId"] in ngmovies:
-            winner.append(target['contentId'])
-    shuffle(winner)
-    if len(winner) == 0:
+            winners.append(target['contentId'])
+    shuffle(winners)
+    if len(winners) == 0:
         raise RetryRequested("再抽選中…。オフセット値を調整する必要があるかもしれません。")
-    return winner.pop()
+    for winner in winners:
+        if quote.getVideoInfo(winner, session)[0] is True:
+            return winner
+    raise RetryRequested("再抽選中…。リミット値を調整する必要があるかもしれません。")
+
