@@ -60,7 +60,7 @@ def showMessage(liveId: str, msg: str, session: Session, *, permanent: bool = Fa
     payload = {"text": msg, "isPermanent": permanent}
     header = {"User-Agent": UserAgent}
     resp = put(url, json=payload, headers=header, cookies=session.cookie)
-    if resp.status_code == 403:
+    if resp.status_code in (403, 401):
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
     resp.raise_for_status()
