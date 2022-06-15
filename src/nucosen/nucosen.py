@@ -99,13 +99,13 @@ def run():
                                 "APIのフィルターが不適切でないか確認してください。\n" +
                                 "{0}".format(requests))
                             selection = personality.randomSelection(
-                                config("TAGS").split(","))
+                                config("TAGS").split(","), session)
                         else:
                             selection = winners.pop()
                             database.enqueueByList(winners)
                     else:
                         selection = personality.randomSelection(
-                            config("REQTAGS").split(","))
+                            config("REQTAGS").split(","), session)
                     nextVideoId = selection
 
                 logger.info("引用を開始します: {0}".format(nextVideoId))
