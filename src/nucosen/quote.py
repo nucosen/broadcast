@@ -23,6 +23,9 @@ def getCurrent(liveId: str, session: Session) -> Optional[str]:
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+    if resp.status_code == 409:
+        # TODO 適切な例外名を使う
+        raise ReLoggedIn("コンフリクト発生。位置:GC")
     if resp.status_code == 404:
         return None
     resp.raise_for_status()
@@ -38,6 +41,9 @@ def stop(liveId: str, session: Session):
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+    if resp.status_code == 409:
+        # TODO 適切な例外名を使う
+        raise ReLoggedIn("コンフリクト発生。位置:GC")
     resp.raise_for_status()
 
 
@@ -89,6 +95,10 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+    if resp.status_code == 409:
+        # TODO 適切な例外名を使う
+        raise ReLoggedIn("コンフリクト発生。位置:GC")
+
     resp.raise_for_status()
     postedVideoLength = getVideoInfo(videoId, session)[1]
     return postedVideoLength
