@@ -23,7 +23,7 @@ NetworkErrors = (HTTPError, ConnectionError, ReLoggedIn)
 UserAgent = "NUCOSen Backend"
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getLives"))
 def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     # NOTE - 戻り値 : (オンエア枠, 次枠)
     if session.cookie is None:
@@ -44,7 +44,7 @@ def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     return (currentProgram, nextProgram)
 
 
-@retry(NotExpectedResult, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NotExpectedResult, delay=1, backoff=2, logger=getLogger(__name__ + ".sGetLives"))
 def sGetLives(session: Session) -> Tuple[str, str]:
     result = getLives(session)
     if result[0] is None or result[1] is None:
@@ -54,7 +54,7 @@ def sGetLives(session: Session) -> Tuple[str, str]:
         return (str(result[0]), str(result[1]))
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".showMessage"))
 def showMessage(liveId: str, msg: str, session: Session, *, permanent: bool = False):
     url = "https://live2.nicovideo.jp/watch/{0}/operator_comment".format(liveId)
     payload = {"text": msg, "isPermanent": permanent}
@@ -94,7 +94,7 @@ def generateLiveDict(category: str, communityId: str, tags: List[str]):
     }
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".takeReservation"))
 def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int, session: Session) -> Response:
     # TODO - This function SHOULD returns JSON decodable response ONLY.
     url = "https://live2.nicovideo.jp/unama/api/v2/programs"
@@ -165,7 +165,7 @@ def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: 
         getLogger(__name__).warning("メンテ後の枠が取得できなかったかもしれません。")
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".reserveLive"))
 def reserveLive(category: str, communityId: str, tags: List[str], session: Session) -> None:
     liveDict = generateLiveDict(category, communityId, tags)
     startTime = getStartTimeOfNextLive()
@@ -187,7 +187,7 @@ def reserveLive(category: str, communityId: str, tags: List[str], session: Sessi
         response.raise_for_status()
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getStartTime"))
 def getStartTime(liveId: str, session: Session) -> datetime:
     url = "https://live2.nicovideo.jp/unama/watch/{0}/programinfo"\
         .format(liveId)

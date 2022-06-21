@@ -18,7 +18,7 @@ class ReLoggedIn(Exception):
 NetworkErrors = (HTTPError, ConnectionError, ReLoggedIn)
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getCurrent"))
 def getCurrent(liveId: str, session: Session) -> Optional[str]:
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation"
     resp = get(url.format(liveId), cookies=session.cookie)
@@ -33,7 +33,7 @@ def getCurrent(liveId: str, session: Session) -> Optional[str]:
     return quotationContent
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".stop"))
 def stop(liveId: str, session: Session):
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation"
     resp = delete(url.format(liveId), cookies=session.cookie)
@@ -43,7 +43,7 @@ def stop(liveId: str, session: Session):
     resp.raise_for_status()
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getViceoInfo"))
 def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/quote/services/video/contents/{0}"
     resp = get(url.format(videoId), cookies=session.cookie)
@@ -62,7 +62,7 @@ def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
     return (quotable, length, introducing)
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".once"))
 def once(liveId: str, videoId: str, session: Session) -> timedelta:
     stop(liveId, session)
 
@@ -97,7 +97,7 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
     return postedVideoLength
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".loop"))
 def loop(liveId: str, videoId: str, session: Session):
     once(liveId, videoId, session)
 
