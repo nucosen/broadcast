@@ -6,8 +6,8 @@ from requests import get
 from requests.exceptions import ConnectionError, HTTPError
 from retry import retry
 
-import quote
-from sessionCookie import Session
+from nucosen import quote
+from nucosen.sessionCookie import Session
 
 
 class RetryRequested(Exception):
