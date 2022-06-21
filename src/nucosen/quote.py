@@ -1,12 +1,14 @@
 from datetime import timedelta
 from logging import getLogger
 from typing import Optional, Tuple, Dict, Any
+from time import sleep
 
 from requests import delete, get, post
 from requests.exceptions import ConnectionError, HTTPError
 from retry import retry
 
 from nucosen.sessionCookie import Session
+
 
 
 class ReLoggedIn(Exception):
@@ -23,9 +25,6 @@ def getCurrent(liveId: str, session: Session) -> Optional[str]:
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
-    if resp.status_code == 409:
-        # TODO 適切な例外名を使う
-        raise ReLoggedIn("コンフリクト発生。位置:GC")
     if resp.status_code == 404:
         return None
     resp.raise_for_status()
@@ -41,9 +40,6 @@ def stop(liveId: str, session: Session):
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
-    if resp.status_code == 409:
-        # TODO 適切な例外名を使う
-        raise ReLoggedIn("コンフリクト発生。位置:S")
     resp.raise_for_status()
 
 
@@ -91,14 +87,11 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
             }
         ]
     }
+    sleep(1.5)
     resp = post(url.format(liveId), json=payload, cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
-    if resp.status_code == 409:
-        # TODO 適切な例外名を使う
-        raise ReLoggedIn("コンフリクト発生。位置:O")
-
     resp.raise_for_status()
     postedVideoLength = getVideoInfo(videoId, session)[1]
     return postedVideoLength
@@ -123,7 +116,6 @@ def loop(liveId: str, videoId: str, session: Session):
         },
         "repeat": True
     }
-    # -H "Cookie: user_session=XXXXXX"
     resp = post(url.format(liveId), json=payload, cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
