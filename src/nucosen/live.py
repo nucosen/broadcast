@@ -74,8 +74,9 @@ def generateLiveDict(category: str, communityId: str, tags: List[str]):
         "title": "【{0}】24時間引用配信【動画紹介】".format(category),
         "description": '<font size="+1">NUCOSenへようこそ！</font>' +
         '<br /><br />この生放送はBotにより自動的に配信されています。<br /><br />' +
-        '放送内容をリクエストしてみませんか？<br />連携サイト「NUCOSen LIVE」にて受け付けております！<br />' +
-        'アクセスはこちらから → https://www.nucosen.live/<br />（リンク先で「{0}」を選択してください）'
+        # '放送内容をリクエストしてみませんか？<br />連携サイト「NUCOSen LIVE」にて受け付けております！<br />' +
+        # 'アクセスはこちらから → https://www.nucosen.live/<br />（リンク先で「{0}」を選択してください）'
+        ""
         .format(category),
         "category": "動画紹介",
         "tags": tagDicts,
