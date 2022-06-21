@@ -31,7 +31,7 @@ class RestDbIo(object):
         self.__header = header
         self.__dequeueCache: List[Dict[str, str]] = []
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".dequeue"))
     def dequeue(self) -> str | None:
         if self.isQueueUpdated:
             # 優先・エンキュー逆順
@@ -48,12 +48,12 @@ class RestDbIo(object):
         self.__deleteQueueItem(result["_id"])
         return result["videoId"]
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".__deleteQueueItem"))
     def __deleteQueueItem(self, itemId: str):
         resp = delete(self.__queueUrl+"/"+itemId, headers=self.__header)
         resp.raise_for_status()
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".enqueueByList"))
     def enqueueByList(self, items: Iterable[str]):
         payload = list()
         for item in items:
@@ -68,7 +68,7 @@ class RestDbIo(object):
         resp.raise_for_status()
         self.isQueueUpdated = True
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".priorityEnqueue"))
     def priorityEnqueue(self, item: str):
         if not match("^[a-z][a-z][0-9]+$", item):
             getLogger(__name__).error("アボート:無効な動画IDでの優先エンキュー。{0}".format(item))
@@ -78,7 +78,7 @@ class RestDbIo(object):
         resp.raise_for_status()
         self.isQueueUpdated = True
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getAndResetRequests"))
     def getAndResetRequests(self) -> Optional[List[str]]:
         resp = get(self.__requestUrl, headers=self.__header)
         resp.raise_for_status()
@@ -93,7 +93,7 @@ class RestDbIo(object):
         self.__deleteRequestItems(deletionIds)
         return requestVideoIds
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
+    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".__deleteRequestItems"))
     def __deleteRequestItems(self, items: List[str]):
         resp = delete(
             self.__requestUrl+"/*", json=items, headers=self.__header)
