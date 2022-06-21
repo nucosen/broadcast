@@ -28,7 +28,7 @@ def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     # NOTE - 戻り値 : (オンエア枠, 次枠)
     if session.cookie is None:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新。発生箇所:GL1")
     url = "https://live2.nicovideo.jp/unama/tool/v2/onairs/user"
     header = {
         "X-niconico-session": session.cookie.get("user_session"),
@@ -36,7 +36,7 @@ def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     resp = get(url, headers=header)
     if resp.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新。発生箇所:GL2")
     resp.raise_for_status()
     result = dict(resp.json()).get("data", {})
     currentProgram = result.get("programId", None)
@@ -56,13 +56,13 @@ def sGetLives(session: Session) -> Tuple[str, str]:
 
 @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__))
 def showMessage(liveId: str, msg: str, session: Session, *, permanent: bool = False):
-    url = "http://live2.nicovideo.jp/watch/{0}/operator_comment".format(liveId)
+    url = "https://live2.nicovideo.jp/watch/{0}/operator_comment".format(liveId)
     payload = {"text": msg, "isPermanent": permanent}
     header = {"User-Agent": UserAgent}
     resp = put(url, json=payload, headers=header, cookies=session.cookie)
     if resp.status_code in (403, 401):
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新。発生箇所:SM2")
     resp.raise_for_status()
 
 
@@ -71,8 +71,8 @@ def generateLiveDict(category: str, communityId: str, tags: List[str]):
     for tag in tags:
         tagDicts.append({"label": tag, "isLocked": True})
     return {
-        "title": "【{0}】24時間リクエスト配信【動画紹介】".format(category),
-        "description": '<font size="+1">24時間リクエスト配信へようこそ！</font>' +
+        "title": "【{0}】24時間引用配信【動画紹介】".format(category),
+        "description": '<font size="+1">NUCOSenへようこそ！</font>' +
         '<br /><br />この生放送はBotにより自動的に配信されています。<br /><br />' +
         '放送内容をリクエストしてみませんか？<br />連携サイト「NUCOSen LIVE」にて受け付けております！<br />' +
         'アクセスはこちらから → https://www.nucosen.live/<br />（リンク先で「{0}」を選択してください）'
@@ -108,7 +108,7 @@ def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int
 
     if response.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新。発生箇所:TR")
     if response.status_code > 399:
         getLogger(__name__).error("枠予約失敗 : {0}".format(response.text))
         response.raise_for_status()
@@ -193,7 +193,7 @@ def getStartTime(liveId: str, session: Session) -> datetime:
     response = get(url, cookies=session.cookie)
     if response.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新。発生箇所:GST")
     response.raise_for_status()
     result = response.json()
     beginUnixTime = int(result["data"]["beginAt"])
@@ -206,7 +206,7 @@ def getEndTime(liveId: str, session: Session) -> datetime:
     response = get(url, cookies=session.cookie)
     if response.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新。発生箇所:GET")
     response.raise_for_status()
     result = response.json()
     beginUnixTime = int(result["data"]["endAt"])
