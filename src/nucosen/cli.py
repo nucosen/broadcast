@@ -1,13 +1,25 @@
-from logging import basicConfig
+from logging import INFO, StreamHandler, Formatter, WARNING, root
 
 from nucosen import nucosen
 from nucosen.discordHandler import DiscordHandler
 
 
 def execute():
-    basicConfig(
-        format='**{levelname}** @ ``{name}`` ({funcName})\n{message}',
-        style='{',
-        handlers=(DiscordHandler(),),
-    )
+    stdErr = StreamHandler()
+    oneLineFormat = Formatter("{asctime} [{levelname:4}] {message}", style="{")
+    stdErr.setLevel(INFO)
+    stdErr.setFormatter(oneLineFormat)
+
+    discordErr = DiscordHandler()
+    twoLineFormat = Formatter('**{levelname}** @ ``{name}`` ({funcName})\n{message}', style="{")
+    discordErr.setLevel(WARNING)
+    discordErr.setFormatter(twoLineFormat)
+
+    root.addHandler(stdErr)
+    root.addHandler(discordErr)
+    root.setLevel(INFO)
+
+    import logging
+    logging.getLogger(__name__).info("TEST")
+
     nucosen.run()
