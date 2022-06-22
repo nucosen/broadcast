@@ -8,7 +8,7 @@ NUCOSenで使用されている、自動放送システムのソースコード�
 
 <!-- # Badges -->
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/74c7db0448f247b78186f650a0793952)](https://www.codacy.com/gh/nucosen/broadcast/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nucosen/broadcast&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/f26d74df081e4aa4ac231f1d149c5619)](https://www.codacy.com/gh/nucosen/broadcast/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nucosen/broadcast&amp;utm_campaign=Badge_Grade)
 [![Github license](https://img.shields.io/github/license/nucosen/broadcast)](https://github.com/nucosen/broadcast/blob/main/LICENSE)
 [![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/nucosen/broadcast)](https://github.com/nucosen/broadcast/blob/main/Pipfile)
 [![GitHub Release Date](https://img.shields.io/github/release-date/nucosen/broadcast)](https://github.com/nucosen/broadcast/releases/latest)
