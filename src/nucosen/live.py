@@ -110,6 +110,9 @@ def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int
     if response.status_code == 401:
         session.login()
         raise ReLoggedIn("ログインセッション更新。発生箇所:TR")
+    if response.status_code == 400:
+        # TODO メンテ以外の400リクエストを除外
+        return response
     if response.status_code > 399:
         getLogger(__name__).error("枠予約失敗 : {0}".format(response.text))
         response.raise_for_status()
