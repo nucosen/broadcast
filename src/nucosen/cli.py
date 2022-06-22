@@ -19,7 +19,4 @@ def execute():
     root.addHandler(discordErr)
     root.setLevel(INFO)
 
-    import logging
-    logging.getLogger(__name__).info("TEST")
-
     nucosen.run()
