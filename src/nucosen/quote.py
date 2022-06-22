@@ -3,7 +3,7 @@ from logging import getLogger
 from typing import Optional, Tuple, Dict, Any
 from time import sleep
 
-from requests import delete, get, post
+from requests import delete, get, post, patch
 from requests.exceptions import ConnectionError, HTTPError
 from retry import retry
 
@@ -96,11 +96,14 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
     postedVideoLength = getVideoInfo(videoId, session)[1]
     return postedVideoLength
 
-
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".loop"))
 def loop(liveId: str, videoId: str, session: Session):
     once(liveId, videoId, session)
+    setLoop(liveId, session)
 
+
+@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".setLoop"))
+def setLoop(liveId: str, session: Session):
+    sleep(1)
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation/layout"
     payload = {
         "layout": {
@@ -116,7 +119,7 @@ def loop(liveId: str, videoId: str, session: Session):
         },
         "repeat": True
     }
-    resp = post(url.format(liveId), json=payload, cookies=session.cookie)
+    resp = patch(url.format(liveId), json=payload, cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
