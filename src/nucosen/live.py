@@ -41,6 +41,8 @@ def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     result = dict(resp.json()).get("data", {})
     currentProgram = result.get("programId", None)
     nextProgram = result.get("nextProgramId", None)
+    if nextProgram == currentProgram:
+        nextProgram = None
     return (currentProgram, nextProgram)
 
 
