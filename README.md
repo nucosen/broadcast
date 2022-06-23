@@ -20,9 +20,9 @@ NUCOSenで使用されている、自動放送システムのソースコード�
 
 ## Advantages
 
-  - 自動枠取り
-  - REST APIを備えたデータベースでリクエスト受付ができる
-  - 枠の終了時間を確認し、音楽が途切れそうならば次枠に繰り越す
+-   自動枠取り
+-   REST APIを備えたデータベースでリクエスト受付ができる
+-   枠の終了時間を確認し、音楽が途切れそうならば次枠に繰り越す
 
 ## Installation
 
@@ -36,6 +36,6 @@ Python3.10以降必須
 
 ## Contributors
 
-  - [sitting-cat](https://github.com/sitting-cat)
+-   [sitting-cat](https://github.com/sitting-cat)
 
 <!-- CREATED_BY_LEADYOU_README_GENERATOR -->
