@@ -2,6 +2,7 @@ from datetime import datetime, time, timedelta, timezone
 from logging import getLogger
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple
+import sys
 
 from requests import get, post, put
 from requests.exceptions import ConnectionError, HTTPError
@@ -46,19 +47,20 @@ def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     return (currentProgram, nextProgram)
 
 
-@retry(NotExpectedResult, delay=1, backoff=2, logger=getLogger(__name__ + ".sGetLives"))
 def sGetLives(session: Session) -> Tuple[str, str]:
     result = getLives(session)
     if result[0] is None or result[1] is None:
-        raise NotExpectedResult(
-            "取得した枠情報が期待される値ではありませんでした。{0} {1}".format(result[0], result[1]))
+        getLogger(__name__).critical(
+            "現枠・次枠の両方が揃っていません。{0} {1}".format(result[0], result[1]))
+        sys.exit(1)
     else:
         return (str(result[0]), str(result[1]))
 
 
 @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".showMessage"))
 def showMessage(liveId: str, msg: str, session: Session, *, permanent: bool = False):
-    url = "https://live2.nicovideo.jp/watch/{0}/operator_comment".format(liveId)
+    url = "https://live2.nicovideo.jp/watch/{0}/operator_comment".format(
+        liveId)
     payload = {"text": msg, "isPermanent": permanent}
     header = {"User-Agent": UserAgent}
     resp = put(url, json=payload, headers=header, cookies=session.cookie)
