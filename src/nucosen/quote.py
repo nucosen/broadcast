@@ -10,7 +10,6 @@ from retry import retry
 from nucosen.sessionCookie import Session
 
 
-
 class ReLoggedIn(Exception):
     pass
 
@@ -47,11 +46,14 @@ def stop(liveId: str, session: Session):
 
 @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getViceoInfo"))
 def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
+    # NOTE - 戻り値: (引用可能性, 動画長, 紹介メッセージ)
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/quote/services/video/contents/{0}"
     resp = get(url.format(videoId), cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+    if resp.status_code == 500:
+        return (False, timedelta(seconds=0), "ERROR : このメッセージを見たら開発者へ連絡してください Twitter:@nucosen")
     resp.raise_for_status()
     videoData: Dict[str, Any] = dict(resp.json()).get("data", {})
     quotable = videoData.get("quotable", False)
@@ -60,7 +62,6 @@ def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
         videoData.get("title", "（無題）"),
         videoData.get("id", "sm0")
     )
-    # NOTE - 戻り値: (引用可能性, 動画長, 紹介メッセージ)
     return (quotable, length, introducing)
 
 
@@ -97,6 +98,7 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
     resp.raise_for_status()
     postedVideoLength = getVideoInfo(videoId, session)[1]
     return postedVideoLength
+
 
 def loop(liveId: str, videoId: str, session: Session):
     once(liveId, videoId, session)
