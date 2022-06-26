@@ -10,7 +10,6 @@ from retry import retry
 from nucosen.sessionCookie import Session
 
 
-
 class ReLoggedIn(Exception):
     pass
 
@@ -52,6 +51,8 @@ def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+    if resp.status_code == 500:
+        return (False, timedelta(seconds=0), "ERROR : このメッセージを見たら開発者へ連絡してください Twitter:@nucosen")
     resp.raise_for_status()
     videoData: Dict[str, Any] = dict(resp.json()).get("data", {})
     quotable = videoData.get("quotable", False)
@@ -97,6 +98,7 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
     resp.raise_for_status()
     postedVideoLength = getVideoInfo(videoId, session)[1]
     return postedVideoLength
+
 
 def loop(liveId: str, videoId: str, session: Session):
     once(liveId, videoId, session)
