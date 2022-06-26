@@ -40,6 +40,8 @@ def stop(liveId: str, session: Session):
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+    if resp.status_code == 404:
+        getLogger(__name__).info("停止すべき引用が存在しませんでした。")
     resp.raise_for_status()
 
 
