@@ -38,4 +38,12 @@ Python3.10以降必須
 
 -   [sitting-cat](https://github.com/sitting-cat)
 
+## LICENSE
+
+See also [LICENSE file](https://github.com/nucosen/broadcast/blob/main/LICENSE).
+
+Copyright 2022 NUCOSen運営会議
+
+[![AGPLv3](https://github.com/nucosen/broadcast/blob/main/docs/AGPLv3.png)](https://github.com/nucosen/broadcast/blob/main/LICENSE)
+
 <!-- CREATED_BY_LEADYOU_README_GENERATOR -->

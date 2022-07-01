@@ -130,7 +130,6 @@ dmypy.json
 
 # Private files
 private/
-docs/
 
 # VSCode files
 .vscode/
