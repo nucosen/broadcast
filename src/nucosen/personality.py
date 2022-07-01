@@ -36,14 +36,14 @@ class RetryRequested(Exception):
 NetworkErrors = (HTTPError, ConnectionError, RetryRequested)
 
 
-def choiceFromRequests(requests: List[str], max: int) -> Optional[List[str]]:
+def choiceFromRequests(requests: List[str], choicesNum: int) -> Optional[List[str]]:
     shuffle(requests)
     winner = list()
     for request in requests:
         if request in winner:
             continue
         winner.append(request)
-        if len(winner) >= max:
+        if len(winner) >= choicesNum:
             break
     return winner if len(winner) else None
 
