@@ -24,10 +24,11 @@ from typing import Dict, Iterable, List, Optional
 
 from decouple import AutoConfig
 from requests import delete, get, post
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError as ConnError
+from requests.exceptions import HTTPError
 from retry import retry
 
-NetworkErrors = (HTTPError, ConnectionError)
+NetworkErrors = (HTTPError, ConnError)
 
 
 class RestDbIo(object):
