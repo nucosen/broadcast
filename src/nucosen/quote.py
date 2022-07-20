@@ -23,7 +23,8 @@ from typing import Optional, Tuple, Dict, Any
 from time import sleep
 
 from requests import delete, get, post, patch
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError as ConnError
+from requests.exceptions import HTTPError
 from retry import retry
 
 from nucosen.sessionCookie import Session
@@ -33,7 +34,7 @@ class ReLoggedIn(Exception):
     pass
 
 
-NetworkErrors = (HTTPError, ConnectionError, ReLoggedIn)
+NetworkErrors = (HTTPError, ConnError, ReLoggedIn)
 
 
 @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getCurrent"))

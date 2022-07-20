@@ -22,7 +22,8 @@ from random import randint, shuffle
 from typing import List, Optional
 
 from requests import get
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError as ConnError
+from requests.exceptions import HTTPError
 from retry import retry
 
 from nucosen import quote
@@ -33,7 +34,7 @@ class RetryRequested(Exception):
     pass
 
 
-NetworkErrors = (HTTPError, ConnectionError, RetryRequested)
+NetworkErrors = (HTTPError, ConnError, RetryRequested)
 
 
 def choiceFromRequests(requests: List[str], choicesNum: int) -> Optional[List[str]]:

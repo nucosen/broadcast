@@ -24,7 +24,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import sys
 
 from requests import get, post, put
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError as ConnError
+from requests.exceptions import HTTPError
 from requests.models import Response
 from retry import retry
 
@@ -39,7 +40,7 @@ class NotExpectedResult(Exception):
     pass
 
 
-NetworkErrors = (HTTPError, ConnectionError, ReLoggedIn)
+NetworkErrors = (HTTPError, ConnError, ReLoggedIn)
 UserAgent = "NUCOSen Backend"
 
 
