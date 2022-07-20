@@ -24,7 +24,8 @@ from typing import Optional
 from pyotp import TOTP
 from requests import Response, get, post
 from requests.cookies import RequestsCookieJar
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError as ConnError
+from requests.exceptions import HTTPError
 from retry import retry
 
 
@@ -32,7 +33,7 @@ class ReLoginRequested(Exception):
     pass
 
 
-NetworkErrors = (ConnectionError, HTTPError, ReLoginRequested)
+NetworkErrors = (ConnError, HTTPError, ReLoginRequested)
 
 
 @dataclass
