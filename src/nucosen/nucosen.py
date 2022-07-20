@@ -149,7 +149,7 @@ def run():
                 clock.waitUntil(datetime.now(timezone.utc) + videoInfo[1])
                 logger.info("引用終了見込み時刻になりました")
             logger.info("放送が終了しました: {0}".format(currentLiveId))
-    except Exception as e:
+    except Exception:
         t = format_exc()
         logger.critical("例外がキャッチされませんでした\n```\n{0}\n```".format(t))
         sys.exit(0)
