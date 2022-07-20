@@ -32,8 +32,8 @@ class DiscordHandler(logging.StreamHandler):
             config("LOGGING_DISCORD_WEBHOOK", "BAD_URL")
         )
         if self.url == "BAD_URL":
-            raise Exception("START UP ERROR : LOGGING_DISCORD_WEBHOOK is not available.")
-            
+            raise Exception(
+                "START UP ERROR : LOGGING_DISCORD_WEBHOOK is not available.")
 
     def emit(self, record):
         msg = self.format(record)
