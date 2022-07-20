@@ -155,13 +155,13 @@ def getStartTimeOfNextLive(now: Optional[datetime] = None) -> datetime:
         datetime.combine(tomorrow, time(hour=4, tzinfo=JST))
     ]
     for startCondidate in startCandidates:
-        if startCondidate < now:
-            continue
-        return startCondidate.astimezone(timezone.utc)
+        if startCondidate >= now:
+            break
     else:
         getLogger(__name__).error("次枠の適切な開始時刻が見つかりませんでした")
         sleep(0.1)
         return getStartTimeOfNextLive()
+    return startCondidate.astimezone(timezone.utc)
 
 
 def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: datetime, session: Session):
