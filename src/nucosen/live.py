@@ -32,11 +32,11 @@ from retry import retry
 from nucosen.sessionCookie import Session
 
 
-class ReLoggedIn(Exception):
+class NotExpectedResult(Exception):
     pass
 
 
-class NotExpectedResult(Exception):
+class ReLoggedIn(Exception):
     pass
 
 
@@ -49,7 +49,7 @@ def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     # NOTE - 戻り値 : (オンエア枠, 次枠)
     if session.cookie is None:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。発生箇所:GL1")
+        raise ReLoggedIn("新規のログインセッション")
     url = "https://live2.nicovideo.jp/unama/tool/v2/onairs/user"
     header = {
         "X-niconico-session": session.cookie.get("user_session"),
@@ -57,7 +57,7 @@ def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     resp = get(url, headers=header)
     if resp.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。発生箇所:GL2")
+        raise ReLoggedIn("ログインセッション更新")
     resp.raise_for_status()
     result = dict(resp.json()).get("data", {})
     currentProgram = result.get("programId", None)
@@ -86,7 +86,7 @@ def showMessage(liveId: str, msg: str, session: Session, *, permanent: bool = Fa
     resp = put(url, json=payload, headers=header, cookies=session.cookie)
     if resp.status_code in (403, 401):
         session.login()
-        raise ReLoggedIn("ログインセッション更新。発生箇所:SM2")
+        raise ReLoggedIn("ログインセッション更新")
     resp.raise_for_status()
 
 
@@ -133,7 +133,7 @@ def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int
 
     if response.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。発生箇所:TR")
+        raise ReLoggedIn("ログインセッション更新")
     if response.status_code == 400:
         # TODO メンテ以外の400リクエストを除外
         return response
@@ -221,7 +221,7 @@ def getStartTime(liveId: str, session: Session) -> datetime:
     response = get(url, cookies=session.cookie)
     if response.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。発生箇所:GST")
+        raise ReLoggedIn("ログインセッション更新")
     response.raise_for_status()
     result = response.json()
     beginUnixTime = int(result["data"]["beginAt"])
@@ -234,7 +234,7 @@ def getEndTime(liveId: str, session: Session) -> datetime:
     response = get(url, cookies=session.cookie)
     if response.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。発生箇所:GET")
+        raise ReLoggedIn("ログインセッション更新")
     response.raise_for_status()
     result = response.json()
     beginUnixTime = int(result["data"]["endAt"])
