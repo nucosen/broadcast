@@ -43,7 +43,7 @@ def getCurrent(liveId: str, session: Session) -> Optional[str]:
     resp = get(url.format(liveId), cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新")
     if resp.status_code == 404:
         return None
     resp.raise_for_status()
@@ -58,7 +58,7 @@ def stop(liveId: str, session: Session):
     resp = delete(url.format(liveId), cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新")
     if resp.status_code == 404:
         getLogger(__name__).info("停止すべき引用が存在しませんでした。")
     resp.raise_for_status()
@@ -71,7 +71,7 @@ def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
     resp = get(url.format(videoId), cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新")
     if resp.status_code == 500:
         return (False, timedelta(seconds=0), "ERROR : このメッセージを見たら開発者へ連絡してください Twitter:@nucosen")
     resp.raise_for_status()
@@ -114,7 +114,7 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
     resp = post(url.format(liveId), json=payload, cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新")
     resp.raise_for_status()
     postedVideoLength = getVideoInfo(videoId, session)[1]
     return postedVideoLength
@@ -146,5 +146,5 @@ def setLoop(liveId: str, session: Session):
     resp = patch(url.format(liveId), json=payload, cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
-        raise ReLoggedIn("ログインセッション更新。連続してこのエラーが出た場合は異常です")
+        raise ReLoggedIn("ログインセッション更新")
     resp.raise_for_status()
