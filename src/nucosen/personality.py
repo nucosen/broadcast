@@ -73,11 +73,13 @@ def randomSelection(tags: List[str], session: Session) -> str:
     ]
 
     response = get(url, headers=header, params=payload)
-    result = dict(response.json())
     # スナップショット検索が死んでいるときはテレビちゃんを休ませる
+    getLogger(__name__).info(
+        "Result status : {0}".format(response.status_code))
     if response.status_code == 503:
         return "sm17759202"
     response.raise_for_status()
+    result = dict(response.json())
     winners: List[str] = []
     for target in result['data']:
         if not target["contentId"] in ngmovies:
@@ -89,4 +91,3 @@ def randomSelection(tags: List[str], session: Session) -> str:
         if quote.getVideoInfo(winner, session)[0] is True:
             return winner
     raise RetryRequested("再抽選中…。リミット値を調整する必要があるかもしれません。")
-

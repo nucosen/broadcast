@@ -24,7 +24,7 @@ here = pathlib.Path(__file__).parent.resolve()
 
 setup(
     name='nucosen',
-    version='3.2.0',
+    version='3.2.1b0',
     description='Broadcasting system for NUCOSen',
     url='https://github.com/nucosen/Broadcast',
     author='NUCOSen Management Committee',

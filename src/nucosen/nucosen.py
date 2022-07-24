@@ -118,7 +118,7 @@ def run():
                                 "APIのフィルターが不適切でないか確認してください。\n" +
                                 "{0}".format(requests))
                             selection = personality.randomSelection(
-                                config("TAGS").split(","), session)
+                                config("REQTAGS").split(","), session)
                         else:
                             selection = winners.pop()
                             database.enqueueByList(winners)
