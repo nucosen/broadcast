@@ -119,7 +119,7 @@ def run():
                                 "1. APIのフィルターを点検" +
                                 "{0}".format(requests))
                             selection = personality.randomSelection(
-                                config("TAGS").split(","), session)
+                                config("REQTAGS").split(","), session)
                         else:
                             selection = winners.pop()
                             database.enqueueByList(winners)
