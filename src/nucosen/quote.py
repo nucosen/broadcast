@@ -64,7 +64,7 @@ def stop(liveId: str, session: Session):
     resp.raise_for_status()
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getViceoInfo"))
+@retry(NetworkErrors, tries=3, delay=1, backoff=2, logger=getLogger(__name__ + ".getVideoInfo"))
 def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
     # NOTE - 戻り値: (引用可能性, 動画長, 紹介メッセージ)
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/quote/services/video/contents/{0}"
