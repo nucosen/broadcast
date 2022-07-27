@@ -22,9 +22,15 @@ import pathlib
 
 here = pathlib.Path(__file__).parent.resolve()
 
+VERSION = {}
+
+with open("./src/nucosen/__init__.py") as fp:
+    exec(fp.read(), VERSION)
+
 setup(
     name='nucosen',
-    version='3.2.1b0',
+    license="GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
+    version=VERSION.get("__version__", "0.0.0"),
     description='Broadcasting system for NUCOSen',
     url='https://github.com/nucosen/Broadcast',
     author='NUCOSen Management Committee',
