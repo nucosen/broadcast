@@ -51,13 +51,14 @@ def choiceFromRequests(requests: List[str], choicesNum: int) -> Optional[List[st
 
 @retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".randomSelection"))
 def randomSelection(tags: List[str], session: Session) -> str:
+    _tags = tags.copy()
     url = "https://api.search.nicovideo.jp/api/v2/snapshot/video/contents/search"
     header = {
         "UserAgent": "NUCOSen Broadcast Personality System"
     }
-    shuffle(tags)
+    shuffle(_tags)
     payload = {
-        "q": tags.pop(),
+        "q": _tags.pop(),
         "targets": "tagsExact",
         "fields": "contentId",
         "filters[lengthSeconds][gte]": 45,
