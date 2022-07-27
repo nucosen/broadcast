@@ -45,7 +45,7 @@ class Session(object):
     user_agent: str = "NUCOSen Automatic Login"
     cookie: Optional[RequestsCookieJar] = None
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".login"))
+    @retry(NetworkErrors, tries=3, delay=1, backoff=2, logger=getLogger(__name__ + ".login"))
     def login(self):
         header = {
             "User-Agent": self.user_agent,

@@ -49,7 +49,7 @@ def choiceFromRequests(requests: List[str], choicesNum: int) -> Optional[List[st
     return winner if len(winner) else None
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".randomSelection"))
+@retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".randomSelection"))
 def randomSelection(tags: List[str], session: Session) -> str:
     url = "https://api.search.nicovideo.jp/api/v2/snapshot/video/contents/search"
     header = {
