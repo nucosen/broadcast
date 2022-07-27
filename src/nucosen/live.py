@@ -44,7 +44,7 @@ NetworkErrors = (HTTPError, ConnError, ReLoggedIn)
 UserAgent = "NUCOSen Backend"
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getLives"))
+@retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".getLives"))
 def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     # NOTE - 戻り値 : (オンエア枠, 次枠)
     if session.cookie is None:
@@ -77,7 +77,7 @@ def sGetLives(session: Session) -> Tuple[str, str]:
         return (str(result[0]), str(result[1]))
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".showMessage"))
+@retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".showMessage"))
 def showMessage(liveId: str, msg: str, session: Session, *, permanent: bool = False):
     url = "https://live2.nicovideo.jp/watch/{0}/operator_comment".format(
         liveId)
@@ -118,7 +118,7 @@ def generateLiveDict(category: str, communityId: str, tags: List[str]):
     }
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".takeReservation"))
+@retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".takeReservation"))
 def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int, session: Session) -> Response:
     # TODO - This function SHOULD returns JSON decodable response ONLY.
     url = "https://live2.nicovideo.jp/unama/api/v2/programs"
@@ -138,7 +138,7 @@ def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int
         # TODO メンテ以外の400リクエストを除外
         return response
     if response.status_code > 399:
-        getLogger(__name__).error("枠予約失敗 : {0}".format(response.text))
+        getLogger(__name__).info("枠予約失敗 : {0}".format(response.text))
         response.raise_for_status()
 
     return response
@@ -159,9 +159,8 @@ def getStartTimeOfNextLive(now: Optional[datetime] = None) -> datetime:
         if startCondidate >= now:
             break
     else:
-        getLogger(__name__).error("次枠の適切な開始時刻が見つかりませんでした")
-        sleep(0.1)
-        return getStartTimeOfNextLive()
+        getLogger(__name__).error("次枠の適切な開始時刻を特定できませんでした\n1. 次枠の開始時間を調整\n（明日の午前10時開始で予約済み）")
+        startCondidate = datetime.combine(tomorrow, time(hour=10, tzinfo=JST))
     return startCondidate.astimezone(timezone.utc)
 
 
@@ -176,7 +175,7 @@ def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: 
             break
         currentDuration -= 30
     else:
-        getLogger(__name__).warning("メンテ前の枠が取得できなかったかもしれません。")
+        getLogger(__name__).error("メンテ前（BEFORE）の枠が取得できませんでした\n1. 手動で次枠を取得")
 
     currentStartTime: datetime = defaultStartTime + timedelta(currentDuration)
     for _ in range(10):
@@ -189,10 +188,10 @@ def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: 
             break
         currentStartTime += timedelta(minutes=30)
     else:
-        getLogger(__name__).warning("メンテ後の枠が取得できなかったかもしれません。")
+        getLogger(__name__).error("メンテ後（AFTER）の枠が取得できませんでした\n1. 手動で次々枠を取得")
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".reserveLive"))
+@retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".reserveLive"))
 def reserveLive(category: str, communityId: str, tags: List[str], session: Session) -> None:
     liveDict = generateLiveDict(category, communityId, tags)
     startTime = getStartTimeOfNextLive()
@@ -202,7 +201,7 @@ def reserveLive(category: str, communityId: str, tags: List[str], session: Sessi
     responseJson: dict = response.json()
     responseMeta: dict = responseJson.get("meta", {})
     if not responseMeta.get("status", 0) in [201, 400]:
-        getLogger(__name__).error(
+        getLogger(__name__).warning(
             "予約失敗/{0}".format(responseJson))
         response.raise_for_status()
         return
@@ -214,7 +213,7 @@ def reserveLive(category: str, communityId: str, tags: List[str], session: Sessi
         response.raise_for_status()
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getStartTime"))
+@retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".getStartTime"))
 def getStartTime(liveId: str, session: Session) -> datetime:
     url = "https://live2.nicovideo.jp/unama/watch/{0}/programinfo"\
         .format(liveId)

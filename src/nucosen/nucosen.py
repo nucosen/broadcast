@@ -96,7 +96,7 @@ def run():
                         liveIDs[0], "sm17759202", session)
                     maintenanceEnd = datetime.now(
                         timezone.utc) + maintenanceSpan
-                    logger.warning("リセット処置のため{0}の引用停止。".format(currentQuote))
+                    logger.error("リセット処置のため{0}の引用を中断しました\n1. 直ちに放送を再開する場合はrestart\n2. この動画を再放送する場合は優先エンキュー後にrestart\n3. 調整作業は3分以内に実施".format(currentQuote))
                     live.showMessage(
                         liveIDs[0], "システムが異常停止したため、自動回復機能により復旧しました。\n" +
                         "ご迷惑をおかけし大変申し訳ございません。まもなく再開いたします。", session)
@@ -114,8 +114,9 @@ def run():
                         winners = personality.choiceFromRequests(requests, 5)
                         if winners is None:
                             logger.error(
-                                "リクエストはありましたが当選がありませんでした。\n" +
-                                "APIのフィルターが不適切でないか確認してください。\n" +
+                                "抽選処理を中断しました"
+                                "リクエストはありましたが有効な曲がありませんでした。\n" +
+                                "1. APIのフィルターを点検" +
                                 "{0}".format(requests))
                             selection = personality.randomSelection(
                                 config("TAGS").split(","), session)
