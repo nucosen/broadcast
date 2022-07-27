@@ -234,6 +234,8 @@ def getEndTime(liveId: str, session: Session) -> datetime:
     if response.status_code == 401:
         session.login()
         raise ReLoggedIn("ログインセッション更新")
+    if response.status_code == 404:
+        return datetime.now(timezone.utc)
     response.raise_for_status()
     result = response.json()
     beginUnixTime = int(result["data"]["endAt"])
