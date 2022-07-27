@@ -112,6 +112,12 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
     }
     sleep(1.5)
     resp = post(url.format(liveId), json=payload, cookies=session.cookie)
+    if resp.status_code == 409:
+        resp = patch(
+            (url + "/contents").format(liveId),
+            json={"contents": [{"id": videoId, "type": "video"}]},
+            cookies=session.cookie
+        )
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("ログインセッション更新")
