@@ -29,7 +29,7 @@ from retry import retry
 
 from nucosen.sessionCookie import Session
 
-from xml.etree import ElementTree as ET
+from defusedxml import ElementTree as ET
 
 
 class ReLoggedIn(Exception):
