@@ -8,6 +8,7 @@ requests = "*"
 python-decouple = "*"
 retry = "*"
 pyotp = "*"
+defusedxml = "*"
 
 [dev-packages]
 
