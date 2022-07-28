@@ -74,7 +74,7 @@ def checkNgTag(videoId: str, ngTags: set) -> bool:
     videoThumbInfo = ET.fromstring(resp.text)
     tagsElement = videoThumbInfo.findall(".//tag")
     tags = set(map(lambda x: x.text, tagsElement))
-    return True if len(ngTags | tags) == 0 else False
+    return True if len(ngTags & tags) == 0 else False
 
 
 @retry(NetworkErrors, tries=3, delay=1, backoff=2, logger=getLogger(__name__ + ".getVideoInfo"))
