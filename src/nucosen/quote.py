@@ -29,6 +29,8 @@ from retry import retry
 
 from nucosen.sessionCookie import Session
 
+from defusedxml import ElementTree as ET
+
 
 class ReLoggedIn(Exception):
     pass
@@ -64,8 +66,19 @@ def stop(liveId: str, session: Session):
     resp.raise_for_status()
 
 
+@retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".checkNgTag"))
+def checkNgTag(videoId: str, ngTags: set) -> bool:
+    url = "https://ext.nicovideo.jp/api/getthumbinfo/{0}"
+    resp = get(url.format(videoId))
+    resp.raise_for_status()
+    videoThumbInfo = ET.fromstring(resp.text)
+    tagsElement = videoThumbInfo.findall(".//tag")
+    tags = set(map(lambda x: x.text, tagsElement))
+    return True if len(ngTags | tags) == 0 else False
+
+
 @retry(NetworkErrors, tries=3, delay=1, backoff=2, logger=getLogger(__name__ + ".getVideoInfo"))
-def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
+def getVideoInfo(videoId: str, session: Session, ngTags: set) -> Tuple[bool, timedelta, str]:
     # NOTE - 戻り値: (引用可能性, 動画長, 紹介メッセージ)
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/quote/services/video/contents/{0}"
     resp = get(url.format(videoId), cookies=session.cookie)
@@ -73,10 +86,13 @@ def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
         session.login()
         raise ReLoggedIn("ログインセッション更新")
     if resp.status_code == 500:
-        return (False, timedelta(seconds=0), "ERROR : このメッセージを見たら開発者へ連絡してください Twitter:@nucosen")
+        return (False, timedelta(seconds=0), "ERROR")
     resp.raise_for_status()
     videoData: Dict[str, Any] = dict(resp.json()).get("data", {})
     quotable = videoData.get("quotable", False)
+    # NOTE : 重いので引用可能動画のみNGタグの処理を行う
+    if quotable:
+        quotable = checkNgTag(videoId, ngTags)
     length = timedelta(seconds=videoData.get("length", 0))
     introducing = "{0} / {1}".format(
         videoData.get("title", "（無題）"),
@@ -122,7 +138,7 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
         session.login()
         raise ReLoggedIn("ログインセッション更新")
     resp.raise_for_status()
-    postedVideoLength = getVideoInfo(videoId, session)[1]
+    postedVideoLength = getVideoInfo(videoId, session, set())[1]
     return postedVideoLength
 
 
