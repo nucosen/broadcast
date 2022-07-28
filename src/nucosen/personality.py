@@ -50,7 +50,7 @@ def choiceFromRequests(requests: List[str], choicesNum: int) -> Optional[List[st
 
 
 @retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".randomSelection"))
-def randomSelection(tags: List[str], session: Session) -> str:
+def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
     _tags = tags.copy()
     url = "https://api.search.nicovideo.jp/api/v2/snapshot/video/contents/search"
     header = {
@@ -87,7 +87,7 @@ def randomSelection(tags: List[str], session: Session) -> str:
     if len(winners) == 0:
         raise RetryRequested("再抽選中…。オフセット値を調整する必要があるかもしれません。")
     for winner in winners:
-        if quote.getVideoInfo(winner, session)[0] is True:
+        if quote.getVideoInfo(winner, session, ngTags)[0] is True:
             return winner
     raise RetryRequested("再抽選中…。リミット値を調整する必要があるかもしれません。")
 
