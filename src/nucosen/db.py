@@ -68,7 +68,7 @@ class RestDbIo(object):
         self.__deleteQueueItem(result["_id"])
         return result["videoId"]
 
-    @retry(NetworkErrors, tries=10 delay=1, backoff=2, logger=getLogger(__name__ + ".__deleteQueueItem"))
+    @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".__deleteQueueItem"))
     def __deleteQueueItem(self, itemId: str):
         resp = delete(self.__queueUrl+"/"+itemId, headers=self.__header)
         resp.raise_for_status()
