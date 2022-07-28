@@ -34,10 +34,15 @@ def run():
     try:
         database = db.RestDbIo()
         configLoader = AutoConfig(getcwd())
-        def config(key): return str(configLoader(key))
-        session = sessionCookie.Session(
-            config("NICO_ID"), config("NICO_PW"), config("NICO_TFA"))
+        def config(key): return str(configLoader(key, default=""))
+        logininfo = config("NICO_ID"), config("NICO_PW"), config("NICO_TFA")
+        if "" in logininfo:
+            getLogger(__name__).info("現在のログイン情報: {0}".format(str(logininfo)))
+            raise Exception("ログイン情報が不十分です。現在の情報はinfoに出力済み。")
+        session = sessionCookie.Session(*logininfo)
         logger.debug("チャンネルループ開始")
+
+        ngTags = set(config("NG_TAGS").split(","))
 
         while True:
             logger.debug("現枠・次枠の確保開始")
@@ -96,7 +101,8 @@ def run():
                         liveIDs[0], "sm17759202", session)
                     maintenanceEnd = datetime.now(
                         timezone.utc) + maintenanceSpan
-                    logger.error("リセット処置のため{0}の引用を中断しました\n1. 直ちに放送を再開する場合はrestart\n2. この動画を再放送する場合は優先エンキュー後にrestart\n3. 調整作業は3分以内に実施".format(currentQuote))
+                    logger.error(
+                        "リセット処置のため{0}の引用を中断しました\n1. 直ちに放送を再開する場合はrestart\n2. この動画を再放送する場合は優先エンキュー後にrestart\n3. 調整作業は3分以内に実施".format(currentQuote))
                     live.showMessage(
                         liveIDs[0], "システムが異常停止したため、自動回復機能により復旧しました。\n" +
                         "ご迷惑をおかけし大変申し訳ございません。まもなく再開いたします。", session)
@@ -119,18 +125,18 @@ def run():
                                 "1. APIのフィルターを点検" +
                                 "{0}".format(requests))
                             selection = personality.randomSelection(
-                                config("TAGS").split(","), session)
+                                config("TAGS").split(","), session, ngTags)
                         else:
                             selection = winners.pop()
                             database.enqueueByList(winners)
                     else:
                         selection = personality.randomSelection(
-                            config("REQTAGS").split(","), session)
+                            config("REQTAGS").split(","), session, ngTags)
                     nextVideoId = selection
 
                 logger.info("引用を開始します: {0}".format(nextVideoId))
                 currentLiveEnd = live.getEndTime(currentLiveId, session)
-                videoInfo = quote.getVideoInfo(nextVideoId, session)
+                videoInfo = quote.getVideoInfo(nextVideoId, session, ngTags)
                 if videoInfo[0] is False:
                     logger.critical(
                         "キューに引用不能な動画が含まれていました:{0}".format(nextVideoId))

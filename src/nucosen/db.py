@@ -68,7 +68,7 @@ class RestDbIo(object):
         self.__deleteQueueItem(result["_id"])
         return result["videoId"]
 
-    @retry(NetworkErrors, tries=10 delay=1, backoff=2, logger=getLogger(__name__ + ".__deleteQueueItem"))
+    @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".__deleteQueueItem"))
     def __deleteQueueItem(self, itemId: str):
         resp = delete(self.__queueUrl+"/"+itemId, headers=self.__header)
         resp.raise_for_status()
@@ -80,7 +80,8 @@ class RestDbIo(object):
             if match("^[a-z][a-z][0-9]+$", item):
                 payload.append({"videoId": item})
             else:
-                getLogger(__name__).error("優先エンキューを中止しました\n動画IDが無効です（{0}）\n1. 正しいIDだと思われる場合は手動エンキュー\n2. APIのフィルターを点検".format(item))
+                getLogger(__name__).error(
+                    "優先エンキューを中止しました\n動画IDが無効です（{0}）\n1. 正しいIDだと思われる場合は手動エンキュー\n2. APIのフィルターを点検".format(item))
         if len(payload) < 1:
             return
         resp = post(self.__queueUrl, json=payload, headers=self.__header)
@@ -90,7 +91,8 @@ class RestDbIo(object):
     @retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".priorityEnqueue"))
     def priorityEnqueue(self, item: str):
         if not match("^[a-z][a-z][0-9]+$", item):
-            getLogger(__name__).error("優先エンキューを中止しました\n動画IDが無効です（{0}）\n1. 正しいIDだと思われる場合は手動エンキュー\n2. APIのフィルターを点検".format(item))
+            getLogger(__name__).error(
+                "優先エンキューを中止しました\n動画IDが無効です（{0}）\n1. 正しいIDだと思われる場合は手動エンキュー\n2. APIのフィルターを点検".format(item))
             return
         payload = {"videoId": item, "priority": True}
         resp = post(self.__queueUrl, json=payload, headers=self.__header)
