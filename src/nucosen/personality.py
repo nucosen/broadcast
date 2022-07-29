@@ -57,16 +57,18 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
         "UserAgent": "NUCOSen Broadcast Personality System"
     }
     shuffle(_tags)
+    tag = _tags.pop()
+    offset = randint(0, 90)
     payload = {
-        "q": _tags.pop(),
+        "q": tag,
         "targets": "tagsExact",
         "fields": "contentId",
         "filters[lengthSeconds][gte]": 45,
         "filters[lengthSeconds][lte]": 10 * 60,
         "_sort": "-lastCommentTime",
         "_context": "NUCOSen backend",
-        "_limit": "10",
-        "_offset": randint(0, 90)
+        "_limit": "30",
+        "_offset": offset
     }
 
     ngmovies = [
@@ -85,9 +87,9 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
             winners.append(target['contentId'])
     shuffle(winners)
     if len(winners) == 0:
-        raise RetryRequested("再抽選中…。オフセット値を調整する必要があるかもしれません。")
+        raise RetryRequested("E50 セレクション失敗")
     for winner in winners:
         if quote.getVideoInfo(winner, session, ngTags)[0] is True:
             return winner
-    raise RetryRequested("再抽選中…。リミット値を調整する必要があるかもしれません。")
+    raise RetryRequested("E60 セレクションリジェクト")
 
