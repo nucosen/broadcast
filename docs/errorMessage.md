@@ -37,5 +37,3 @@ WARNING @ nucosen.live.getLives (__retry_internal)
 ↓
 
 nucosenパッケージ内、live.pyモジュールのgetLivesファンクションから発せられたWARNINGレベルのエラー。
-
-[表紙に戻る](index.md)
