@@ -49,7 +49,7 @@ def run():
             liveIDs = live.getLives(session)
             if liveIDs[0] is None:
                 if liveIDs[1] is None:
-                    logger.warning("オンエア枠も次枠も見つかりませんでした。")
+                    logger.warning("W0L 枠未検出")
                     live.reserveLive(
                         category=config("CATEGORY"),
                         communityId=config("COMMUNITY"),
@@ -101,8 +101,7 @@ def run():
                         liveIDs[0], "sm17759202", session)
                     maintenanceEnd = datetime.now(
                         timezone.utc) + maintenanceSpan
-                    logger.error(
-                        "リセット処置のため{0}の引用を中断しました\n1. 直ちに放送を再開する場合はrestart\n2. この動画を再放送する場合は優先エンキュー後にrestart\n3. 調整作業は3分以内に実施".format(currentQuote))
+                    logger.error("E30 引用停止 {0}".format(currentQuote))
                     live.showMessage(
                         liveIDs[0], "システムが異常停止したため、自動回復機能により復旧しました。\n" +
                         "ご迷惑をおかけし大変申し訳ございません。まもなく再開いたします。", session)
@@ -119,13 +118,9 @@ def run():
                     if requests is not None:
                         winners = personality.choiceFromRequests(requests, 5)
                         if winners is None:
-                            logger.error(
-                                "抽選処理を中断しました"
-                                "リクエストはありましたが有効な曲がありませんでした。\n" +
-                                "1. APIのフィルターを点検" +
-                                "{0}".format(requests))
+                            logger.error("E40 抽選アボート {0}".format(requests))
                             selection = personality.randomSelection(
-                                config("TAGS").split(","), session, ngTags)
+                                config("REQTAGS").split(","), session, ngTags)
                         else:
                             selection = winners.pop()
                             database.enqueueByList(winners)
