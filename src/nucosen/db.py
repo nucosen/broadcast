@@ -39,7 +39,7 @@ class RestDbIo(object):
         requestUrl = config("REQUEST_URL", default=None)
         key = config("DB_KEY", default=None)
         if None in (queueUrl, requestUrl, key):
-            getLogger(__name__).critical("環境変数を確認してください")
+            getLogger(__name__).critical("C0E 環境変数エラー")
             raise Exception(
                 "RestDbIoの環境変数が全て揃いませんでした。{0} {1} {2}".format(
                     queueUrl, requestUrl, key))
@@ -80,8 +80,7 @@ class RestDbIo(object):
             if match("^[a-z][a-z][0-9]+$", item):
                 payload.append({"videoId": item})
             else:
-                getLogger(__name__).error(
-                    "優先エンキューを中止しました\n動画IDが無効です（{0}）\n1. 正しいIDだと思われる場合は手動エンキュー\n2. APIのフィルターを点検".format(item))
+                getLogger(__name__).error("E09 通常エンキューのアボート {0}".format(item))
         if len(payload) < 1:
             return
         resp = post(self.__queueUrl, json=payload, headers=self.__header)
@@ -91,8 +90,7 @@ class RestDbIo(object):
     @retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".priorityEnqueue"))
     def priorityEnqueue(self, item: str):
         if not match("^[a-z][a-z][0-9]+$", item):
-            getLogger(__name__).error(
-                "優先エンキューを中止しました\n動画IDが無効です（{0}）\n1. 正しいIDだと思われる場合は手動エンキュー\n2. APIのフィルターを点検".format(item))
+            getLogger(__name__).error("E01 優先エンキューのアボート {0}".format(item))
             return
         payload = {"videoId": item, "priority": True}
         resp = post(self.__queueUrl, json=payload, headers=self.__header)
