@@ -36,10 +36,6 @@ class DiscordHandler(logging.StreamHandler):
                 "START UP ERROR : LOGGING_DISCORD_WEBHOOK is not available.")
 
     def emit(self, record):
-        if not record.args is None and len(record.args) >= 2:
-            if list(record.args)[1] == 1:
-                # 初回のリトライは無視
-                return
         msg = self.format(record)
         self.send_message(msg)
 
