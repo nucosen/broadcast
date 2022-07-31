@@ -69,7 +69,7 @@ class Session(object):
             self.__mfa_login(resp, header)
             getLogger(__name__).info("MFA成功")
             return
-        raise ReLoginRequested("ログイン失敗")
+        raise ReLoginRequested("L15 ログイン失敗")
 
     def __mfa_login(self, resp: Response, header):
         tfac = TOTP(self.mfa_token)
@@ -94,7 +94,7 @@ class Session(object):
         if "user_session" in resp.cookies:
             self.cookie = resp.cookies
             return
-        raise ReLoginRequested("MFA失敗")
+        raise ReLoginRequested("V40 MFA失敗")
 
     def getSessionString(self) -> Optional[str]:
         # NOTE - X-niconico-sessionなどに使用

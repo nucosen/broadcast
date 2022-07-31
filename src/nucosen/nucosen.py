@@ -38,7 +38,7 @@ def run():
         logininfo = config("NICO_ID"), config("NICO_PW"), config("NICO_TFA")
         if "" in logininfo:
             getLogger(__name__).info("現在のログイン情報: {0}".format(str(logininfo)))
-            raise Exception("ログイン情報が不十分です。現在の情報はinfoに出力済み。")
+            raise Exception("V00 ログイン情報が不十分です。現在の情報はinfoに出力済み。")
         session = sessionCookie.Session(*logininfo)
         logger.debug("チャンネルループ開始")
 
@@ -59,8 +59,7 @@ def run():
                     liveIDs = live.getLives(session)
                 nextLive: str | None = liveIDs[0] or liveIDs[1]
                 if nextLive is None:
-                    logger.critical("予約したはずの枠が確認できませんでした")
-                    raise Exception("新しい予約の認識に失敗")
+                    raise Exception("V10 予約確認エラー")
                 nextLiveBegin = live.getStartTime(nextLive, session)
                 clock.waitUntil(nextLiveBegin)
                 liveIDs = live.getLives(session)
@@ -133,10 +132,8 @@ def run():
                 currentLiveEnd = live.getEndTime(currentLiveId, session)
                 videoInfo = quote.getVideoInfo(nextVideoId, session, ngTags)
                 if videoInfo[0] is False:
-                    logger.critical(
-                        "キューに引用不能な動画が含まれていました:{0}".format(nextVideoId))
-                    raise Exception(
-                        "引用不能な動画を引用しようとした:{0} at {1}".format(nextVideoId, currentLiveId))
+                    raise Exception("V20 引用不能エラー {0} {1}".format(
+                        nextVideoId, currentLiveId))
                 if datetime.now(timezone.utc) + videoInfo[1] > currentLiveEnd - timedelta(minutes=1):
                     logger.info("引用アボート: 時間内に引用が終了しない見込みです")
                     database.priorityEnqueue(nextVideoId)

@@ -39,10 +39,8 @@ class RestDbIo(object):
         requestUrl = config("REQUEST_URL", default=None)
         key = config("DB_KEY", default=None)
         if None in (queueUrl, requestUrl, key):
-            getLogger(__name__).critical("C0E 環境変数エラー")
-            raise Exception(
-                "RestDbIoの環境変数が全て揃いませんでした。{0} {1} {2}".format(
-                    queueUrl, requestUrl, key))
+            raise Exception("V0E 環境変数エラー {0} {1} {2}".format(
+                queueUrl, requestUrl, key))
         header = {'x-apikey': str(key), 'cache-control': "no-cache"}
 
         self.isQueueUpdated: bool = True
