@@ -87,9 +87,9 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
             winners.append(target['contentId'])
     shuffle(winners)
     if len(winners) == 0:
-        raise RetryRequested("E50 セレクション失敗")
+        raise RetryRequested("V30 セレクション失敗")
     for winner in winners:
         if quote.getVideoInfo(winner, session, ngTags)[0] is True:
             return winner
-    raise RetryRequested("E60 セレクションリジェクト")
+    raise RetryRequested("V31 セレクションリジェクト")
 
