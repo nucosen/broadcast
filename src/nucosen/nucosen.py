@@ -40,6 +40,7 @@ def run():
             getLogger(__name__).info("現在のログイン情報: {0}".format(str(logininfo)))
             raise Exception("V00 ログイン情報が不十分です。現在の情報はinfoに出力済み。")
         session = sessionCookie.Session(*logininfo)
+        session.login()
         logger.debug("チャンネルループ開始")
 
         ngTags = set(config("NG_TAGS").split(","))
