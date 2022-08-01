@@ -63,6 +63,7 @@ def stop(liveId: str, session: Session):
         raise ReLoggedIn("L11 ログインセッション更新")
     if resp.status_code == 404:
         getLogger(__name__).info("停止すべき引用が存在しませんでした。")
+        return
     resp.raise_for_status()
 
 
