@@ -29,6 +29,8 @@ from retry import retry
 
 from nucosen.sessionCookie import Session
 
+from defusedxml import ElementTree as ET
+
 
 class ReLoggedIn(Exception):
     pass
@@ -37,13 +39,13 @@ class ReLoggedIn(Exception):
 NetworkErrors = (HTTPError, ConnError, ReLoggedIn)
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getCurrent"))
+@retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".getCurrent"))
 def getCurrent(liveId: str, session: Session) -> Optional[str]:
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation"
     resp = get(url.format(liveId), cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
-        raise ReLoggedIn("ログインセッション更新")
+        raise ReLoggedIn("L10 ログインセッション更新")
     if resp.status_code == 404:
         return None
     resp.raise_for_status()
@@ -52,31 +54,46 @@ def getCurrent(liveId: str, session: Session) -> Optional[str]:
     return quotationContent
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".stop"))
+@retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".stop"))
 def stop(liveId: str, session: Session):
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation"
     resp = delete(url.format(liveId), cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
-        raise ReLoggedIn("ログインセッション更新")
+        raise ReLoggedIn("L11 ログインセッション更新")
     if resp.status_code == 404:
         getLogger(__name__).info("停止すべき引用が存在しませんでした。")
+        return
     resp.raise_for_status()
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getViceoInfo"))
-def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
+@retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".checkNgTag"))
+def checkNgTag(videoId: str, ngTags: set) -> bool:
+    url = "https://ext.nicovideo.jp/api/getthumbinfo/{0}"
+    resp = get(url.format(videoId))
+    resp.raise_for_status()
+    videoThumbInfo = ET.fromstring(resp.text)
+    tagsElement = videoThumbInfo.findall(".//tag")
+    tags = set(map(lambda x: x.text, tagsElement))
+    return True if len(ngTags & tags) == 0 else False
+
+
+@retry(NetworkErrors, tries=3, delay=1, backoff=2, logger=getLogger(__name__ + ".getVideoInfo"))
+def getVideoInfo(videoId: str, session: Session, ngTags: set) -> Tuple[bool, timedelta, str]:
     # NOTE - 戻り値: (引用可能性, 動画長, 紹介メッセージ)
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/quote/services/video/contents/{0}"
     resp = get(url.format(videoId), cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
-        raise ReLoggedIn("ログインセッション更新")
+        raise ReLoggedIn("L12 ログインセッション更新")
     if resp.status_code == 500:
-        return (False, timedelta(seconds=0), "ERROR : このメッセージを見たら開発者へ連絡してください Twitter:@nucosen")
+        return (False, timedelta(seconds=0), "ERROR")
     resp.raise_for_status()
     videoData: Dict[str, Any] = dict(resp.json()).get("data", {})
     quotable = videoData.get("quotable", False)
+    # NOTE : 重いので引用可能動画のみNGタグの処理を行う
+    if quotable:
+        quotable = checkNgTag(videoId, ngTags)
     length = timedelta(seconds=videoData.get("length", 0))
     introducing = "{0} / {1}".format(
         videoData.get("title", "（無題）"),
@@ -85,7 +102,7 @@ def getVideoInfo(videoId: str, session: Session) -> Tuple[bool, timedelta, str]:
     return (quotable, length, introducing)
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".once"))
+@retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".once"))
 def once(liveId: str, videoId: str, session: Session) -> timedelta:
     stop(liveId, session)
 
@@ -112,11 +129,17 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
     }
     sleep(1.5)
     resp = post(url.format(liveId), json=payload, cookies=session.cookie)
+    if resp.status_code == 409:
+        resp = patch(
+            (url + "/contents").format(liveId),
+            json={"contents": [{"id": videoId, "type": "video"}]},
+            cookies=session.cookie
+        )
     if resp.status_code == 403:
         session.login()
-        raise ReLoggedIn("ログインセッション更新")
+        raise ReLoggedIn("L13 ログインセッション更新")
     resp.raise_for_status()
-    postedVideoLength = getVideoInfo(videoId, session)[1]
+    postedVideoLength = getVideoInfo(videoId, session, set())[1]
     return postedVideoLength
 
 
@@ -125,7 +148,7 @@ def loop(liveId: str, videoId: str, session: Session):
     setLoop(liveId, session)
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".setLoop"))
+@retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".setLoop"))
 def setLoop(liveId: str, session: Session):
     sleep(1)
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation/layout"
@@ -146,5 +169,5 @@ def setLoop(liveId: str, session: Session):
     resp = patch(url.format(liveId), json=payload, cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
-        raise ReLoggedIn("ログインセッション更新")
+        raise ReLoggedIn("L14 ログインセッション更新")
     resp.raise_for_status()

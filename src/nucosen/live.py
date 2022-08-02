@@ -44,12 +44,12 @@ NetworkErrors = (HTTPError, ConnError, ReLoggedIn)
 UserAgent = "NUCOSen Backend"
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getLives"))
+@retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".getLives"))
 def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     # NOTE - 戻り値 : (オンエア枠, 次枠)
     if session.cookie is None:
         session.login()
-        raise ReLoggedIn("新規のログインセッション")
+        raise ReLoggedIn("L00 ログインセッション更新")
     url = "https://live2.nicovideo.jp/unama/tool/v2/onairs/user"
     header = {
         "X-niconico-session": session.cookie.get("user_session"),
@@ -57,7 +57,7 @@ def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
     resp = get(url, headers=header)
     if resp.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新")
+        raise ReLoggedIn("L01 ログインセッション更新")
     resp.raise_for_status()
     result = dict(resp.json()).get("data", {})
     currentProgram = result.get("programId", None)
@@ -70,14 +70,15 @@ def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
 def sGetLives(session: Session) -> Tuple[str, str]:
     result = getLives(session)
     if result[0] is None or result[1] is None:
-        getLogger(__name__).critical(
-            "現枠・次枠の両方が揃っていません。{0} {1}".format(result[0], result[1]))
+        getLogger(__name__).critical("C0L 枠情報取得エラー {0} {1}".format(
+            result[0], result[1]
+        ))
         sys.exit(1)
     else:
         return (str(result[0]), str(result[1]))
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".showMessage"))
+@retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".showMessage"))
 def showMessage(liveId: str, msg: str, session: Session, *, permanent: bool = False):
     url = "https://live2.nicovideo.jp/watch/{0}/operator_comment".format(
         liveId)
@@ -86,7 +87,7 @@ def showMessage(liveId: str, msg: str, session: Session, *, permanent: bool = Fa
     resp = put(url, json=payload, headers=header, cookies=session.cookie)
     if resp.status_code in (403, 401):
         session.login()
-        raise ReLoggedIn("ログインセッション更新")
+        raise ReLoggedIn("L02 ログインセッション更新")
     resp.raise_for_status()
 
 
@@ -118,7 +119,7 @@ def generateLiveDict(category: str, communityId: str, tags: List[str]):
     }
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".takeReservation"))
+@retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".takeReservation"))
 def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int, session: Session) -> Response:
     # TODO - This function SHOULD returns JSON decodable response ONLY.
     url = "https://live2.nicovideo.jp/unama/api/v2/programs"
@@ -133,12 +134,12 @@ def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int
 
     if response.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新")
+        raise ReLoggedIn("L03 ログインセッション更新")
     if response.status_code == 400:
         # TODO メンテ以外の400リクエストを除外
         return response
     if response.status_code > 399:
-        getLogger(__name__).error("枠予約失敗 : {0}".format(response.text))
+        getLogger(__name__).info("枠予約失敗 : {0}".format(response.text))
         response.raise_for_status()
 
     return response
@@ -159,9 +160,8 @@ def getStartTimeOfNextLive(now: Optional[datetime] = None) -> datetime:
         if startCondidate >= now:
             break
     else:
-        getLogger(__name__).error("次枠の適切な開始時刻が見つかりませんでした")
-        sleep(0.1)
-        return getStartTimeOfNextLive()
+        getLogger(__name__).error("E10 放送開始時刻算出エラー")
+        startCondidate = datetime.combine(tomorrow, time(hour=10, tzinfo=JST))
     return startCondidate.astimezone(timezone.utc)
 
 
@@ -176,7 +176,7 @@ def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: 
             break
         currentDuration -= 30
     else:
-        getLogger(__name__).warning("メンテ前の枠が取得できなかったかもしれません。")
+        getLogger(__name__).error("E20 枠予約失敗")
 
     currentStartTime: datetime = defaultStartTime + timedelta(currentDuration)
     for _ in range(10):
@@ -189,10 +189,10 @@ def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: 
             break
         currentStartTime += timedelta(minutes=30)
     else:
-        getLogger(__name__).warning("メンテ後の枠が取得できなかったかもしれません。")
+        getLogger(__name__).error("E21 枠予約失敗")
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".reserveLive"))
+@retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".reserveLive"))
 def reserveLive(category: str, communityId: str, tags: List[str], session: Session) -> None:
     liveDict = generateLiveDict(category, communityId, tags)
     startTime = getStartTimeOfNextLive()
@@ -202,8 +202,8 @@ def reserveLive(category: str, communityId: str, tags: List[str], session: Sessi
     responseJson: dict = response.json()
     responseMeta: dict = responseJson.get("meta", {})
     if not responseMeta.get("status", 0) in [201, 400]:
-        getLogger(__name__).error(
-            "予約失敗/{0}".format(responseJson))
+        getLogger(__name__).warning(
+            "W20 枠予約失敗 {0}".format(responseJson))
         response.raise_for_status()
         return
     elif responseMeta["status"] == 201:
@@ -214,14 +214,14 @@ def reserveLive(category: str, communityId: str, tags: List[str], session: Sessi
         response.raise_for_status()
 
 
-@retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getStartTime"))
+@retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".getStartTime"))
 def getStartTime(liveId: str, session: Session) -> datetime:
     url = "https://live2.nicovideo.jp/unama/watch/{0}/programinfo"\
         .format(liveId)
     response = get(url, cookies=session.cookie)
     if response.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新")
+        raise ReLoggedIn("L04 ログインセッション更新")
     response.raise_for_status()
     result = response.json()
     beginUnixTime = int(result["data"]["beginAt"])
@@ -234,7 +234,9 @@ def getEndTime(liveId: str, session: Session) -> datetime:
     response = get(url, cookies=session.cookie)
     if response.status_code == 401:
         session.login()
-        raise ReLoggedIn("ログインセッション更新")
+        raise ReLoggedIn("L05 ログインセッション更新")
+    if response.status_code == 404:
+        return datetime.now(timezone.utc)
     response.raise_for_status()
     result = response.json()
     beginUnixTime = int(result["data"]["endAt"])

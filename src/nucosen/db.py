@@ -39,10 +39,8 @@ class RestDbIo(object):
         requestUrl = config("REQUEST_URL", default=None)
         key = config("DB_KEY", default=None)
         if None in (queueUrl, requestUrl, key):
-            getLogger(__name__).critical("環境変数を確認してください")
-            raise Exception(
-                "RestDbIoの環境変数が全て揃いませんでした。{0} {1} {2}".format(
-                    queueUrl, requestUrl, key))
+            raise Exception("V0E 環境変数エラー {0} {1} {2}".format(
+                queueUrl, requestUrl, key))
         header = {'x-apikey': str(key), 'cache-control': "no-cache"}
 
         self.isQueueUpdated: bool = True
@@ -51,7 +49,7 @@ class RestDbIo(object):
         self.__header = header
         self.__dequeueCache: List[Dict[str, str]] = []
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".dequeue"))
+    @retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".dequeue"))
     def dequeue(self) -> str | None:
         if self.isQueueUpdated:
             # 優先・エンキュー逆順
@@ -68,37 +66,36 @@ class RestDbIo(object):
         self.__deleteQueueItem(result["_id"])
         return result["videoId"]
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".__deleteQueueItem"))
+    @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".__deleteQueueItem"))
     def __deleteQueueItem(self, itemId: str):
         resp = delete(self.__queueUrl+"/"+itemId, headers=self.__header)
         resp.raise_for_status()
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".enqueueByList"))
+    @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".enqueueByList"))
     def enqueueByList(self, items: Iterable[str]):
         payload = list()
         for item in items:
             if match("^[a-z][a-z][0-9]+$", item):
                 payload.append({"videoId": item})
             else:
-                getLogger(__name__).error(
-                    "アボート:無効な動画IDでの通常エンキュー。{0}".format(item))
+                getLogger(__name__).error("E09 通常エンキューのアボート {0}".format(item))
         if len(payload) < 1:
             return
         resp = post(self.__queueUrl, json=payload, headers=self.__header)
         resp.raise_for_status()
         self.isQueueUpdated = True
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".priorityEnqueue"))
+    @retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".priorityEnqueue"))
     def priorityEnqueue(self, item: str):
         if not match("^[a-z][a-z][0-9]+$", item):
-            getLogger(__name__).error("アボート:無効な動画IDでの優先エンキュー。{0}".format(item))
+            getLogger(__name__).error("E01 優先エンキューのアボート {0}".format(item))
             return
         payload = {"videoId": item, "priority": True}
         resp = post(self.__queueUrl, json=payload, headers=self.__header)
         resp.raise_for_status()
         self.isQueueUpdated = True
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".getAndResetRequests"))
+    @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".getAndResetRequests"))
     def getAndResetRequests(self) -> Optional[List[str]]:
         resp = get(self.__requestUrl, headers=self.__header)
         resp.raise_for_status()
@@ -113,7 +110,7 @@ class RestDbIo(object):
         self.__deleteRequestItems(deletionIds)
         return requestVideoIds
 
-    @retry(NetworkErrors, delay=1, backoff=2, logger=getLogger(__name__ + ".__deleteRequestItems"))
+    @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".__deleteRequestItems"))
     def __deleteRequestItems(self, items: List[str]):
         resp = delete(
             self.__requestUrl+"/*", json=items, headers=self.__header)

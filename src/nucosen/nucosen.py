@@ -34,17 +34,23 @@ def run():
     try:
         database = db.RestDbIo()
         configLoader = AutoConfig(getcwd())
-        def config(key): return str(configLoader(key))
-        session = sessionCookie.Session(
-            config("NICO_ID"), config("NICO_PW"), config("NICO_TFA"))
+        def config(key): return str(configLoader(key, default=""))
+        logininfo = config("NICO_ID"), config("NICO_PW"), config("NICO_TFA")
+        if "" in logininfo:
+            getLogger(__name__).info("現在のログイン情報: {0}".format(str(logininfo)))
+            raise Exception("V00 ログイン情報が不十分です。現在の情報はinfoに出力済み。")
+        session = sessionCookie.Session(*logininfo)
+        session.login()
         logger.debug("チャンネルループ開始")
+
+        ngTags = set(config("NG_TAGS").split(","))
 
         while True:
             logger.debug("現枠・次枠の確保開始")
             liveIDs = live.getLives(session)
             if liveIDs[0] is None:
                 if liveIDs[1] is None:
-                    logger.warning("オンエア枠も次枠も見つかりませんでした。")
+                    logger.warning("W0L 枠未検出")
                     live.reserveLive(
                         category=config("CATEGORY"),
                         communityId=config("COMMUNITY"),
@@ -54,8 +60,7 @@ def run():
                     liveIDs = live.getLives(session)
                 nextLive: str | None = liveIDs[0] or liveIDs[1]
                 if nextLive is None:
-                    logger.critical("予約したはずの枠が確認できませんでした")
-                    raise Exception("新しい予約の認識に失敗")
+                    raise Exception("V10 予約確認エラー")
                 nextLiveBegin = live.getStartTime(nextLive, session)
                 clock.waitUntil(nextLiveBegin)
                 liveIDs = live.getLives(session)
@@ -96,7 +101,7 @@ def run():
                         liveIDs[0], "sm17759202", session)
                     maintenanceEnd = datetime.now(
                         timezone.utc) + maintenanceSpan
-                    logger.warning("リセット処置のため{0}の引用停止。".format(currentQuote))
+                    logger.error("E30 引用停止 {0}".format(currentQuote))
                     live.showMessage(
                         liveIDs[0], "システムが異常停止したため、自動回復機能により復旧しました。\n" +
                         "ご迷惑をおかけし大変申し訳ございません。まもなく再開いたします。", session)
@@ -113,28 +118,23 @@ def run():
                     if requests is not None:
                         winners = personality.choiceFromRequests(requests, 5)
                         if winners is None:
-                            logger.error(
-                                "リクエストはありましたが当選がありませんでした。\n" +
-                                "APIのフィルターが不適切でないか確認してください。\n" +
-                                "{0}".format(requests))
+                            logger.error("E40 抽選アボート {0}".format(requests))
                             selection = personality.randomSelection(
-                                config("REQTAGS").split(","), session)
+                                config("REQTAGS").split(","), session, ngTags)
                         else:
                             selection = winners.pop()
                             database.enqueueByList(winners)
                     else:
                         selection = personality.randomSelection(
-                            config("REQTAGS").split(","), session)
+                            config("REQTAGS").split(","), session, ngTags)
                     nextVideoId = selection
 
                 logger.info("引用を開始します: {0}".format(nextVideoId))
                 currentLiveEnd = live.getEndTime(currentLiveId, session)
-                videoInfo = quote.getVideoInfo(nextVideoId, session)
+                videoInfo = quote.getVideoInfo(nextVideoId, session, ngTags)
                 if videoInfo[0] is False:
-                    logger.critical(
-                        "キューに引用不能な動画が含まれていました:{0}".format(nextVideoId))
-                    raise Exception(
-                        "引用不能な動画を引用しようとした:{0} at {1}".format(nextVideoId, currentLiveId))
+                    raise Exception("V20 引用不能エラー {0} {1}".format(
+                        nextVideoId, currentLiveId))
                 if datetime.now(timezone.utc) + videoInfo[1] > currentLiveEnd - timedelta(minutes=1):
                     logger.info("引用アボート: 時間内に引用が終了しない見込みです")
                     database.priorityEnqueue(nextVideoId)
