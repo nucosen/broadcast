@@ -31,6 +31,9 @@ from nucosen.sessionCookie import Session
 
 from defusedxml import ElementTree as ET
 
+# FIXME : DELETE when unused.
+from pprint import pformat
+
 
 class ReLoggedIn(Exception):
     pass
@@ -106,7 +109,6 @@ def getVideoInfo(videoId: str, session: Session, ngTags: set) -> Tuple[bool, tim
 def once(liveId: str, videoId: str, session: Session) -> timedelta:
     stop(liveId, session)
 
-    # TODO - 音量をチェックする
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation"
     payload = {
         "layout": {
@@ -138,6 +140,29 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
     if resp.status_code == 403:
         session.login()
         raise ReLoggedIn("L13 ログインセッション更新")
+
+    # NOTE : Just logging
+    # FIXME : Delete before miner update.
+    if resp.status_code == 400:
+        getLogger(__name__).warning(
+            "これはNUCOが問題調査のため収集しているエラーログです。\n" +
+            "```\n"+
+            "Method : POST\n" +
+            "Target : {0}\n" +
+            "Payload : {1}\n" +
+            "Cookie : {2}\n" +
+            "==========\n" +
+            "Status code : {3}\n" +
+            "Response body : \n{4}\n" +
+            "```".format(
+                url.format(liveId),
+                pformat(payload),
+                "Bad" if session.getSessionString is None else "Good",
+                resp.status_code,
+                resp.text
+            )
+        )
+
     resp.raise_for_status()
     postedVideoLength = getVideoInfo(videoId, session, set())[1]
     return postedVideoLength
