@@ -144,9 +144,9 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
     # NOTE : Just logging
     # FIXME : Delete before miner update.
     if resp.status_code == 400:
-        getLogger(__name__).warning(
+        getLogger(__name__).warning((
             "これはNUCOが問題調査のため収集しているエラーログです。\n" +
-            "```\n"+
+            "```\n" +
             "Method : POST\n" +
             "Target : {0}\n" +
             "Payload : {1}\n" +
@@ -154,14 +154,13 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
             "==========\n" +
             "Status code : {3}\n" +
             "Response body : \n{4}\n" +
-            "```".format(
+            "```").format(
                 url.format(liveId),
                 pformat(payload),
                 "Bad" if session.getSessionString is None else "Good",
                 resp.status_code,
                 resp.text
-            )
-        )
+        ))
 
     resp.raise_for_status()
     postedVideoLength = getVideoInfo(videoId, session, set())[1]
