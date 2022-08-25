@@ -19,7 +19,6 @@ along with NUCOSen Broadcast.  If not, see <https://www.gnu.org/licenses/>.
 
 from datetime import datetime, time, timedelta, timezone
 from logging import getLogger
-from time import sleep
 from typing import Any, Dict, List, Optional, Tuple
 import sys
 
@@ -30,6 +29,9 @@ from requests.models import Response
 from retry import retry
 
 from nucosen.sessionCookie import Session
+
+# FIXME Delete if unused
+from pprint import pformat
 
 
 class NotExpectedResult(Exception):
@@ -156,11 +158,30 @@ def getStartTimeOfNextLive(now: Optional[datetime] = None) -> datetime:
         datetime.combine(now.date(), time(hour=22, tzinfo=JST)),
         datetime.combine(tomorrow, time(hour=4, tzinfo=JST))
     ]
+
+    LOGGING_SAMPLE_OF_startCandidates = list(map(
+        lambda x : x.isoformat(),
+        startCandidates.copy()
+    ))
+
     for startCondidate in startCandidates:
         if startCondidate >= now:
             break
     else:
         getLogger(__name__).error("E10 放送開始時刻算出エラー")
+        getLogger(__name__).warning((
+            "これはNUCOが問題解決のために収集しているログです:\n" +
+            "```\n" +
+            "now : {0}\n" +
+            "tomorrow : {1}\n" +
+            "startCandidates ; \n" +
+            "{2}\n" +
+            "```"
+        ).format(
+            now.isoformat(),
+            tomorrow.isoformat(),
+            pformat(LOGGING_SAMPLE_OF_startCandidates)
+        ))
         startCondidate = datetime.combine(tomorrow, time(hour=10, tzinfo=JST))
     return startCondidate.astimezone(timezone.utc)
 
