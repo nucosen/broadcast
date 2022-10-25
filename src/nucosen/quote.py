@@ -31,11 +31,12 @@ from nucosen.sessionCookie import Session
 
 from defusedxml import ElementTree as ET
 
-# FIXME : DELETE when unused.
-from pprint import pformat
-
 
 class ReLoggedIn(Exception):
+    pass
+
+
+class RetryRequired(Exception):
     pass
 
 
@@ -105,7 +106,7 @@ def getVideoInfo(videoId: str, session: Session, ngTags: set) -> Tuple[bool, tim
     return (quotable, length, introducing)
 
 
-@retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".once"))
+@retry(NetworkErrors, tries=10, delay=5, backoff=2, logger=getLogger(__name__ + ".once"))
 def once(liveId: str, videoId: str, session: Session) -> timedelta:
     stop(liveId, session)
 
@@ -141,26 +142,17 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
         session.login()
         raise ReLoggedIn("L13 ログインセッション更新")
 
-    # NOTE : Just logging
-    # FIXME : Delete before miner update.
     if resp.status_code == 400:
-        getLogger(__name__).warning((
-            "これはNUCOが問題調査のため収集しているエラーログです。\n" +
-            "```\n" +
-            "Method : POST\n" +
+        getLogger(__name__).info((
+            "400 Error Log ==========\n" +
             "Target : {0}\n" +
-            "Payload : {1}\n" +
-            "Cookie : {2}\n" +
-            "==========\n" +
-            "Status code : {3}\n" +
-            "Response body : \n{4}\n" +
-            "```").format(
+            "Cookie : {1}\n" +
+            "Response body ; \n{2}").format(
                 url.format(liveId),
-                pformat(payload),
                 "Bad" if session.getSessionString is None else "Good",
-                resp.status_code,
                 resp.text
         ))
+        raise RetryRequired("W01 引用拒否発生")
 
     resp.raise_for_status()
     postedVideoLength = getVideoInfo(videoId, session, set())[1]

@@ -147,7 +147,10 @@ def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int
 
 def getStartTimeOfNextLive(now: Optional[datetime] = None) -> datetime:
     JST = timezone(timedelta(hours=9))
-    now = now or datetime.now(tz=JST)
+    if now is None:
+        now = datetime.now(tz=JST)
+    else:
+        now = now.astimezone(JST)
     tomorrow = now.date() + timedelta(days=1)
     startCandidates = [
         datetime.combine(now.date(), time(hour=4, tzinfo=JST)),
@@ -160,6 +163,8 @@ def getStartTimeOfNextLive(now: Optional[datetime] = None) -> datetime:
         if startCondidate >= now:
             break
     else:
+        from pprint import pprint
+        pprint(locals())
         getLogger(__name__).error("E10 放送開始時刻算出エラー")
         startCondidate = datetime.combine(tomorrow, time(hour=10, tzinfo=JST))
     return startCondidate.astimezone(timezone.utc)
@@ -169,17 +174,24 @@ def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: 
     endTime = getStartTimeOfNextLive(defaultStartTime)
     currentDurationObject = endTime - defaultStartTime
     currentDuration = currentDurationObject.seconds // 60
-    while currentDuration > 0:
-        resp = takeReservation(
-            liveDict, defaultStartTime, currentDuration, session)
-        if resp.status_code == 201:
-            break
-        currentDuration -= 30
+    print(currentDuration)
+    if(currentDuration == 0):
+        getLogger(__name__).warning("W21 枠予約アボート")
     else:
-        getLogger(__name__).error("E20 枠予約失敗")
+        while currentDuration > 0:
+            resp = takeReservation(
+                liveDict, defaultStartTime, currentDuration, session)
+            if resp.status_code == 201:
+                break
+            currentDuration -= 30
+            print(defaultStartTime.isoformat(), currentDuration, sep=" /// ")
+            print(resp.text)
+        else:
+            getLogger(__name__).error("E20 枠予約失敗")
 
     currentStartTime: datetime = defaultStartTime + timedelta(currentDuration)
-    for _ in range(10):
+    for _ in range(24 * 60 // 30):
+        # NOTE : 24時間後でも取れない場合はアボート
         endTime = getStartTimeOfNextLive(currentStartTime)
         liveDurationObject = endTime - currentStartTime
         liveDuration = liveDurationObject.seconds // 60
@@ -188,6 +200,8 @@ def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: 
         if resp.status_code == 201:
             break
         currentStartTime += timedelta(minutes=30)
+        print(endTime, liveDuration, sep=" /// ")
+        print(resp.text)
     else:
         getLogger(__name__).error("E21 枠予約失敗")
 

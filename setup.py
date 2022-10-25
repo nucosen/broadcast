@@ -17,6 +17,8 @@ You should have received a copy of the GNU Affero General Public License
 along with NUCOSen Broadcast.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+# NOTE : To build, use `py setup.py sdist`
+
 from setuptools import setup, find_packages
 import pathlib
 
