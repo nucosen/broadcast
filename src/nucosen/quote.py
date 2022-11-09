@@ -17,6 +17,8 @@ You should have received a copy of the GNU Affero General Public License
 along with NUCOSen Broadcast.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from decouple import AutoConfig
+from os import getcwd
 from datetime import timedelta
 from logging import getLogger
 from typing import Optional, Tuple, Dict, Any
@@ -40,7 +42,7 @@ class RetryRequired(Exception):
     pass
 
 
-NetworkErrors = (HTTPError, ConnError, ReLoggedIn)
+NetworkErrors = (HTTPError, ConnError, ReLoggedIn, RetryRequired)
 
 
 @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".getCurrent"))
@@ -82,6 +84,10 @@ def checkNgTag(videoId: str, ngTags: set) -> bool:
     return True if len(ngTags & tags) == 0 else False
 
 
+def boolConfig(key, default):
+    return bool(AutoConfig(getcwd())(key, default))
+
+
 @retry(NetworkErrors, tries=3, delay=1, backoff=2, logger=getLogger(__name__ + ".getVideoInfo"))
 def getVideoInfo(videoId: str, session: Session, ngTags: set) -> Tuple[bool, timedelta, str]:
     # NOTE - 戻り値: (引用可能性, 動画長, 紹介メッセージ)
@@ -94,7 +100,8 @@ def getVideoInfo(videoId: str, session: Session, ngTags: set) -> Tuple[bool, tim
         return (False, timedelta(seconds=0), "ERROR")
     resp.raise_for_status()
     videoData: Dict[str, Any] = dict(resp.json()).get("data", {})
-    quotable = videoData.get("quotable", False)
+    quotable = boolConfig("IGNORE_QUOTABLE_CHECK", False)\
+        or videoData.get("quotable", False)
     # NOTE : 重いので引用可能動画のみNGタグの処理を行う
     if quotable:
         quotable = checkNgTag(videoId, ngTags)

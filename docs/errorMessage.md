@@ -4,7 +4,7 @@
 
 Discordに送信されるエラーメッセージは、以下のフォーマットで表記されています。
 
-```
+```text
 エラーレベル エラーを受理したロガー名 (エラーが発生したファンクション名)
 エラーの内容
 ```
@@ -13,7 +13,7 @@ Discordに送信されるエラーメッセージは、以下のフォーマッ�
 
 一例：
 
-```
+```text
 WARNING @ nucosen.nucosen (run)
 エラーメッセージ
 ```
@@ -29,7 +29,7 @@ nucosenパッケージ内、nucosen.pyモジュールのrunファンクション
 
 一例：
 
-```
+```text
 WARNING @ nucosen.live.getLives (__retry_internal)
 エラーメッセージ, retrying in 1 seconds...
 ```

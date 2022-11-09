@@ -93,3 +93,4 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
             return winner
         getLogger(__name__).info("セレクションリジェクト {0}".format(winner))
     raise RetryRequested("V31 セレクション失敗 {0} {1}".format(tag, offset))
+
