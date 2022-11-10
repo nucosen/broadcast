@@ -11,7 +11,7 @@ NUCOSen Broadcastが読み取る環境変数の一覧。
 | NICO_ID | ニコニコアカウントのメールアドレス |
 | NICO_PW | （機密）ニコニコアカウントのパスワード |
 | NICO_TFA | （機密）ニコニコアカウントの2段階認証を突破するための鍵 |
-| LOGGING_DISCORD_WEBHOOK | ログの送信先。DiscordのウェブフックURL |
+| LOGGING_DISCORD_WEBHOOK | （機密）ログの送信先。DiscordのウェブフックURL |
 | QUEUE_URL | 放送待ちデータベースのURL |
 | REQUEST_URL | リクエスト受理待ちデータベースのURL |
 | DB_KEY | （機密）データベースのアクセス鍵 |
