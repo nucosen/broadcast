@@ -100,8 +100,27 @@ def getVideoInfo(videoId: str, session: Session, ngTags: set) -> Tuple[bool, tim
         return (False, timedelta(seconds=0), "ERROR")
     resp.raise_for_status()
     videoData: Dict[str, Any] = dict(resp.json()).get("data", {})
-    quotable = boolConfig("IGNORE_QUOTABLE_CHECK", False)\
-        or videoData.get("quotable", False)
+    if boolConfig("USE_OLD_VINFO_API", False):
+        # NOTE - This is old api
+        if not "N_Q_GVI_WARNED_OLD_API" in globals():
+            getLogger(__name__).warning("旧APIの呼び出し")
+            global N_Q_GVI_WARNED_OLD_API
+            N_Q_GVI_WARNED_OLD_API = True
+        quotable = boolConfig("IGNORE_QUOTABLE_CHECK", False)\
+            or videoData.get("quotable", False)
+    else:
+        url = "https://lapi.spi.nicovideo.jp/v1/services/select_content/video/{0}"
+        resp = get(url.format(videoId), cookies=session.cookie)
+        if resp.status_code == 403:
+            session.login()
+            raise ReLoggedIn("L15 ログインセッション更新")
+        if resp.status_code == 500:
+            return (False, timedelta(seconds=0), "ERROR")
+        resp.raise_for_status()
+        newApiVideoData: Dict[str, Any] = dict(resp.json())\
+            .get("data", {}).get("content", {})
+        quotable = boolConfig("IGNORE_QUOTABLE_CHECK", False)\
+            or newApiVideoData.get("isQuotableByOtherContents", False)
     # NOTE : 重いので引用可能動画のみNGタグの処理を行う
     if quotable:
         quotable = checkNgTag(videoId, ngTags)
