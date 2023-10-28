@@ -37,6 +37,7 @@ Python3.10以降必須
 ## Contributors
 
 -   [sitting-cat](https://github.com/sitting-cat)
+-   [komatti365](https://github.com/komatti365)
 
 ## LICENSE
 
