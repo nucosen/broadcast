@@ -34,11 +34,19 @@ def run():
     try:
         database = db.RestDbIo()
         configLoader = AutoConfig(getcwd())
+
         def config(key): return str(configLoader(key, default=""))
         logininfo = config("NICO_ID"), config("NICO_PW"), config("NICO_TFA")
         if "" in logininfo:
             getLogger(__name__).info("現在のログイン情報: {0}".format(str(logininfo)))
             raise Exception("V00 ログイン情報が不十分です。現在の情報はinfoに出力済み。")
+
+        SPECIFIC_VIDEO_IDS = [
+            (config("MAINTENANCE_VIDEO_ID") or "sm17759202"),
+            (config("CLOSING_VIDEO_ID") or "sm17572946")
+        ]
+        MAINTENANCE, CLOSING = 0, 1
+
         session = sessionCookie.Session(*logininfo)
         session.login()
         logger.debug("チャンネルループ開始")
@@ -78,12 +86,13 @@ def run():
             currentLiveEnd = live.getEndTime(liveIDs[0], session)
             currentQuote = quote.getCurrent(liveIDs[0], session)
             if currentQuote is not None:
-                if currentQuote == "sm17759202":
-                    logger.info("テレビちゃん休憩中動画の引用を検知しました")
+                if currentQuote == SPECIFIC_VIDEO_IDS[MAINTENANCE]:
+                    logger.info("メンテナンス動画の引用を検知しました")
                     quote.stop(liveIDs[0], session)
-                    quote.once(liveIDs[0], "sm17759202", session)
-                elif currentQuote == "sm17572946":
-                    logger.info("ホタルの光動画の引用を検知しました")
+                    quote.once(
+                        liveIDs[0], SPECIFIC_VIDEO_IDS[MAINTENANCE], session)
+                elif currentQuote == SPECIFIC_VIDEO_IDS[CLOSING]:
+                    logger.info("エンディング動画の引用を検知しました")
                     nextLiveBegin = live.getStartTime(liveIDs[1], session)
                     clock.waitUntil(currentLiveEnd)
                     live.reserveLive(
@@ -98,7 +107,7 @@ def run():
                     logger.info("一般動画の引用を検知しました: {0}".format(currentQuote))
                     quote.stop(liveIDs[0], session)
                     maintenanceSpan = quote.once(
-                        liveIDs[0], "sm17759202", session)
+                        liveIDs[0], SPECIFIC_VIDEO_IDS[MAINTENANCE], session)
                     maintenanceEnd = datetime.now(
                         timezone.utc) + maintenanceSpan
                     logger.error("E30 引用停止 {0}".format(currentQuote))
@@ -138,7 +147,8 @@ def run():
                 if datetime.now(timezone.utc) + videoInfo[1] > currentLiveEnd - timedelta(minutes=1):
                     logger.info("引用アボート: 時間内に引用が終了しない見込みです")
                     database.priorityEnqueue(nextVideoId)
-                    quote.loop(currentLiveId, "sm17572946", session)
+                    quote.loop(currentLiveId, config(
+                        "ENDING_MOVIE_ID"), session)
                     live.showMessage(
                         currentLiveId, "この枠の放送は終了しました。\nご視聴ありがとうございました。",
                         session, permanent=True)
