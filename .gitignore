@@ -133,7 +133,6 @@ private/
 
 # VSCode files
 .vscode/
-.markdownlint.json
 
 # Secrets file
 .config/
