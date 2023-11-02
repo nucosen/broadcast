@@ -133,12 +133,9 @@ private/
 
 # VSCode files
 .vscode/
+.markdownlint.json
 
 # Secrets file
 .config/
 config/
-
 test.py
-
-# Workflow file is not allowed (temporary)
-.github/workflows/*

@@ -19,7 +19,6 @@ along with NUCOSen Broadcast.  If not, see <https://www.gnu.org/licenses/>.
 
 from datetime import datetime, time, timedelta, timezone
 from logging import getLogger
-from time import sleep
 from typing import Any, Dict, List, Optional, Tuple
 import sys
 
