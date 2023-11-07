@@ -40,10 +40,13 @@ class NotExpectedResult(Exception):
 class ReLoggedIn(Exception):
     pass
 
+
 config = AutoConfig(getcwd())
 
 NetworkErrors = (HTTPError, ConnError, ReLoggedIn)
-UserAgent = str(config("NUCOSEN_LIVE_UA",default="anonymous")) + " / NUCOSen Backend"
+UserAgent = str(config("NUCOSEN_LIVE_UA", default="anonymous")
+                ) + " / NUCOSen Backend"
+
 
 @retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".getLives"))
 def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
@@ -92,17 +95,25 @@ def showMessage(liveId: str, msg: str, session: Session, *, permanent: bool = Fa
     resp.raise_for_status()
 
 
-def generateLiveDict(category: str, communityId: str, tags: List[str]):
+def generateLiveDict(category: str, description: str, communityId: str, tags: List[str]):
     tagDicts = []
     for tag in tags:
         tagDicts.append({"label": tag, "isLocked": True})
     return {
         "title": "{0}".format(category),
-        "description": '<font size="+1">NUCOSenへようこそ！</font>' +
-        '<br /><br />この生放送はBotにより自動的に配信されています。<br /><br />' +
-        # '放送内容をリクエストしてみませんか？<br />連携サイト「NUCOSen LIVE」にて受け付けております！<br />' +
-        # 'アクセスはこちらから → https://www.nucosen.live/<br />（リンク先で「{0}」を選択してください）'
-        # .format(category),
+        # NOTE - For users who will modify this text:
+        #        If you modify the program (including this text),
+        #        you must disclose the source code in accordance with AGPLv3.
+        #        Violation of the license will be actionable under copyright law.
+        "description": str(config(
+            "NUCOSEN_LIVE_DESCRIPTION",
+            default='<font size="+1">NUCOSenへようこそ！</font>'
+        )) +
+        '<br /><br />========== Powered by NUCOSen ==========<br />' +
+        '<br />この生放送はBotにより自動的に配信されています。<br />' +
+        '配信システムのソースコードは ' +
+        'https://github.com/nucosen/broadcast' +
+        ' で入手できます<br />' +
         "",
         "category": "動画紹介",
         "tags": tagDicts,
@@ -176,7 +187,7 @@ def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: 
     currentDurationObject = endTime - defaultStartTime
     currentDuration = currentDurationObject.seconds // 60
     print(currentDuration)
-    if(currentDuration == 0):
+    if (currentDuration == 0):
         getLogger(__name__).warning("W21 枠予約アボート")
     else:
         while currentDuration > 0:
