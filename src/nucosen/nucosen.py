@@ -60,7 +60,7 @@ def run():
                 if liveIDs[1] is None:
                     logger.warning("W0L 枠未検出")
                     live.reserveLive(
-                        category=config("CATEGORY"),
+                        title=config("LIVE_TITLE"),
                         communityId=config("COMMUNITY"),
                         tags=config("TAGS").split(","),
                         session=session
@@ -74,7 +74,7 @@ def run():
                 liveIDs = live.getLives(session)
             elif liveIDs[1] is None:
                 live.reserveLive(
-                    category=config("CATEGORY"),
+                    title=config("LIVE_TITLE"),
                     communityId=config("COMMUNITY"),
                     tags=config("TAGS").split(","),
                     session=session
@@ -96,7 +96,7 @@ def run():
                     nextLiveBegin = live.getStartTime(liveIDs[1], session)
                     clock.waitUntil(currentLiveEnd)
                     live.reserveLive(
-                        category=config("CATEGORY"),
+                        title=config("LIVE_TITLE"),
                         communityId=config("COMMUNITY"),
                         tags=config("TAGS").split(","),
                         session=session

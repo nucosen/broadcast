@@ -97,7 +97,7 @@ def generateLiveDict(category: str, communityId: str, tags: List[str]):
     for tag in tags:
         tagDicts.append({"label": tag, "isLocked": True})
     return {
-        "title": "【{0}】24時間引用配信【動画紹介】".format(category),
+        "title": "{0}".format(category),
         "description": '<font size="+1">NUCOSenへようこそ！</font>' +
         '<br /><br />この生放送はBotにより自動的に配信されています。<br /><br />' +
         # '放送内容をリクエストしてみませんか？<br />連携サイト「NUCOSen LIVE」にて受け付けております！<br />' +
@@ -208,8 +208,8 @@ def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: 
 
 
 @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".reserveLive"))
-def reserveLive(category: str, communityId: str, tags: List[str], session: Session) -> None:
-    liveDict = generateLiveDict(category, communityId, tags)
+def reserveLive(title: str, communityId: str, tags: List[str], session: Session) -> None:
+    liveDict = generateLiveDict(title, communityId, tags)
     startTime = getStartTimeOfNextLive()
     duration = 360
 
