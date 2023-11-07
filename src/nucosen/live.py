@@ -29,6 +29,8 @@ from requests.models import Response
 from retry import retry
 
 from nucosen.sessionCookie import Session
+from decouple import AutoConfig
+from os import getcwd
 
 
 class NotExpectedResult(Exception):
@@ -38,10 +40,10 @@ class NotExpectedResult(Exception):
 class ReLoggedIn(Exception):
     pass
 
+config = AutoConfig(getcwd())
 
 NetworkErrors = (HTTPError, ConnError, ReLoggedIn)
-UserAgent = "NUCOSen Backend"
-
+UserAgent = str(config("NUCOSEN_LIVE_UA",default="anonymous")) + " / NUCOSen Backend"
 
 @retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".getLives"))
 def getLives(session: Session) -> Tuple[Optional[str], Optional[str]]:
