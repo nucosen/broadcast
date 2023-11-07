@@ -102,6 +102,7 @@ def generateLiveDict(category: str, description: str, communityId: str, tags: Li
     return {
         "title": "{0}".format(category),
         # NOTE - For users who will modify this text:
+        #        （以下の権利表示を変更しようとしている方へ：）
         #        If you modify the program (including this text),
         #        you must disclose the source code in accordance with AGPLv3.
         #        Violation of the license will be actionable under copyright law.
@@ -114,7 +115,7 @@ def generateLiveDict(category: str, description: str, communityId: str, tags: Li
         '配信システムのソースコードは ' +
         'https://github.com/nucosen/broadcast' +
         ' で入手できます<br />' +
-        "",
+        "=======================================",
         "category": "動画紹介",
         "tags": tagDicts,
         "communityId": communityId,
