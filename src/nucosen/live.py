@@ -95,7 +95,7 @@ def showMessage(liveId: str, msg: str, session: Session, *, permanent: bool = Fa
     resp.raise_for_status()
 
 
-def generateLiveDict(category: str, communityId: str, tags: List[str]):
+def generateLiveDict(category: str, description: str, communityId: str, tags: List[str]):
     tagDicts = []
     for tag in tags:
         tagDicts.append({"label": tag, "isLocked": True})
