@@ -111,9 +111,12 @@ def run():
                     maintenanceEnd = datetime.now(
                         timezone.utc) + maintenanceSpan
                     logger.error("E30 引用停止 {0}".format(currentQuote))
+                    emergencyStopMessage = \
+                        str(config("NUCOSEN_MAINTENANCE_MESSAGE"))\
+                        or "システムが異常停止したため、自動回復機能により復旧しました。\n" +\
+                        "ご迷惑をおかけし大変申し訳ございません。まもなく再開いたします。"
                     live.showMessage(
-                        liveIDs[0], "システムが異常停止したため、自動回復機能により復旧しました。\n" +
-                        "ご迷惑をおかけし大変申し訳ございません。まもなく再開いたします。", session)
+                        liveIDs[0], emergencyStopMessage, session)
                     clock.waitUntil(maintenanceEnd)
 
             currentLiveId = live.sGetLives(session)[0]
