@@ -124,7 +124,8 @@ def generateLiveDict(category: str, communityId: str, tags: List[str]):
         "isMemberOnly": False,
         "isTimeshiftEnabled":
         False if config("NUCOSEN_TIMESHIFT_ENABLED", default=False) else True,
-        "isUadEnabled": True,
+        "isUadEnabled":
+        True if config("NUCOSEN_USER_AD_DISABLED", default=False) else False,
         "isAutoCommentFilterEnabled": False,
         "maxQuality": "1Mbps450p",
         "rightsItems": [],
