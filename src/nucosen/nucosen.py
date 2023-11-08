@@ -153,7 +153,9 @@ def run():
                     quote.loop(currentLiveId, config(
                         "CLOSING_VIDEO_ID"), session)
                     live.showMessage(
-                        currentLiveId, "この枠の放送は終了しました。\nご視聴ありがとうございました。",
+                        currentLiveId,
+                        config("NUCOSEN_CLOSING_MESSAGE") or
+                        "この枠の放送は終了しました。\nご視聴ありがとうございました。",
                         session, permanent=True)
                     clock.waitUntil(currentLiveEnd)
                     break

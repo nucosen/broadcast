@@ -26,3 +26,4 @@ NUCOSen Broadcastが読み取る環境変数の一覧は次の通りです。
 | NUCOSEN_TIMESHIFT_ENABLED | （省略可）省略しない場合は1を指定すること。指定すると、配信のタイムシフトを公開する。省略した場合はタイムシフトは非公開にする。 |
 | NUCOSEN_USER_AD_DISABLED | （省略可）省略しない場合は1を指定すること。指定すると、ニコニ広告を無効にする。 |
 | NUCOSEN_MAINTENANCE_MESSAGE | （省略可）指定すると、メンテナンス画面の投稿者コメントが置き換えられる |
+| NUCOSEN_CLOSING_MESSAGE | （省略可）指定すると、配信終了の投稿者コメントが置き換えられる |
