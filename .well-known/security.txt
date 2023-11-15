@@ -1,6 +1,6 @@
 Contact: mailto:security@koaku.ma
 Expires: 2024-12-31T14:59:00.000Z
-Encryption: https://raw.githubusercontent.com/nucosen/nucosen/main/pgp-key.txt
+Encryption: https://github.com/nucosen/nucosen/raw/main/Koaku.ma_Security_Staff_0x8BB0DD50_public.pgp
 Acknowledgments: https://raw.githubusercontent.com/nucosen/nucosen/main/hall-of-fame.md
 Preferred-Languages: en, jp
 Canonical: https://github.com/nucosen/broadcast/blob/main/.well-known/security.txt
