@@ -41,6 +41,7 @@ NetworkErrors = (HTTPError, ConnError, RetryRequested)
 UserAgent = str(config("NUCOSEN_UA_PREFIX", default="anonymous")
                 ) + " / NUCOSen Broadcast Personality System"
 
+
 def choiceFromRequests(requests: List[str], choicesNum: int) -> Optional[List[str]]:
     shuffle(requests)
     winner = list()
@@ -63,12 +64,18 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
     shuffle(_tags)
     tag = _tags.pop()
     offset = randint(0, 90)
+    minimumAllowableDuration = \
+        int(config("MIN_ALLOWABLE_DURATION", default=45))
+    maximumAllowableDuration = \
+        int(config("MAX_ALLOWABLE_DURATION", default=10 * 60))
+    if maximumAllowableDuration < minimumAllowableDuration:
+        maximumAllowableDuration = minimumAllowableDuration + (10 * 60)
     payload = {
         "q": tag,
         "targets": "tagsExact",
         "fields": "contentId",
-        "filters[lengthSeconds][gte]": 45,
-        "filters[lengthSeconds][lte]": 10 * 60,
+        "filters[lengthSeconds][gte]": minimumAllowableDuration,
+        "filters[lengthSeconds][lte]": maximumAllowableDuration,
         "_sort": "-lastCommentTime",
         "_context": UserAgent,
         "_limit": "30",
@@ -97,4 +104,3 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
             return winner
         getLogger(__name__).info("セレクションリジェクト {0}".format(winner))
     raise RetryRequested("V31 セレクション失敗 {0} {1}".format(tag, offset))
-
