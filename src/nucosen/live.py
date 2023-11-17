@@ -44,7 +44,7 @@ class ReLoggedIn(Exception):
 config = AutoConfig(getcwd())
 
 NetworkErrors = (HTTPError, ConnError, ReLoggedIn)
-UserAgent = str(config("NUCOSEN_LIVE_UA", default="anonymous")
+UserAgent = str(config("NUCOSEN_UA_PREFIX", default="anonymous")
                 ) + " / NUCOSen Backend"
 
 

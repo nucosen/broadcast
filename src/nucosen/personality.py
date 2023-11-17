@@ -25,6 +25,8 @@ from requests import get
 from requests.exceptions import ConnectionError as ConnError
 from requests.exceptions import HTTPError
 from retry import retry
+from decouple import AutoConfig
+from os import getcwd
 
 from nucosen import quote
 from nucosen.sessionCookie import Session
@@ -34,8 +36,10 @@ class RetryRequested(Exception):
     pass
 
 
+config = AutoConfig(getcwd())
 NetworkErrors = (HTTPError, ConnError, RetryRequested)
-
+UserAgent = str(config("NUCOSEN_UA_PREFIX", default="anonymous")
+                ) + " / NUCOSen Broadcast Personality System"
 
 def choiceFromRequests(requests: List[str], choicesNum: int) -> Optional[List[str]]:
     shuffle(requests)
@@ -54,7 +58,7 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
     _tags = tags.copy()
     url = "https://api.search.nicovideo.jp/api/v2/snapshot/video/contents/search"
     header = {
-        "UserAgent": "NUCOSen Broadcast Personality System"
+        "UserAgent": UserAgent
     }
     shuffle(_tags)
     tag = _tags.pop()
@@ -66,7 +70,7 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
         "filters[lengthSeconds][gte]": 45,
         "filters[lengthSeconds][lte]": 10 * 60,
         "_sort": "-lastCommentTime",
-        "_context": "NUCOSen backend",
+        "_context": UserAgent,
         "_limit": "30",
         "_offset": offset
     }
