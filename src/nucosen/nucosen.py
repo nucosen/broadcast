@@ -60,7 +60,7 @@ def run():
                 if liveIDs[1] is None:
                     logger.warning("W0L 枠未検出")
                     live.reserveLive(
-                        category=config("CATEGORY"),
+                        title=config("LIVE_TITLE"),
                         communityId=config("COMMUNITY"),
                         tags=config("TAGS").split(","),
                         session=session
@@ -74,7 +74,7 @@ def run():
                 liveIDs = live.getLives(session)
             elif liveIDs[1] is None:
                 live.reserveLive(
-                    category=config("CATEGORY"),
+                    title=config("LIVE_TITLE"),
                     communityId=config("COMMUNITY"),
                     tags=config("TAGS").split(","),
                     session=session
@@ -96,7 +96,7 @@ def run():
                     nextLiveBegin = live.getStartTime(liveIDs[1], session)
                     clock.waitUntil(currentLiveEnd)
                     live.reserveLive(
-                        category=config("CATEGORY"),
+                        title=config("LIVE_TITLE"),
                         communityId=config("COMMUNITY"),
                         tags=config("TAGS").split(","),
                         session=session
@@ -111,9 +111,12 @@ def run():
                     maintenanceEnd = datetime.now(
                         timezone.utc) + maintenanceSpan
                     logger.error("E30 引用停止 {0}".format(currentQuote))
+                    emergencyStopMessage = \
+                        str(config("NUCOSEN_MAINTENANCE_MESSAGE"))\
+                        or "システムが異常停止したため、自動回復機能により復旧しました。\n" +\
+                        "ご迷惑をおかけし大変申し訳ございません。まもなく再開いたします。"
                     live.showMessage(
-                        liveIDs[0], "システムが異常停止したため、自動回復機能により復旧しました。\n" +
-                        "ご迷惑をおかけし大変申し訳ございません。まもなく再開いたします。", session)
+                        liveIDs[0], emergencyStopMessage, session)
                     clock.waitUntil(maintenanceEnd)
 
             currentLiveId = live.sGetLives(session)[0]
@@ -150,7 +153,9 @@ def run():
                     quote.loop(currentLiveId, config(
                         "CLOSING_VIDEO_ID"), session)
                     live.showMessage(
-                        currentLiveId, "この枠の放送は終了しました。\nご視聴ありがとうございました。",
+                        currentLiveId,
+                        config("NUCOSEN_CLOSING_MESSAGE") or
+                        "この枠の放送は終了しました。\nご視聴ありがとうございました。",
                         session, permanent=True)
                     clock.waitUntil(currentLiveEnd)
                     break

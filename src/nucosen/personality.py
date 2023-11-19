@@ -25,6 +25,8 @@ from requests import get
 from requests.exceptions import ConnectionError as ConnError
 from requests.exceptions import HTTPError
 from retry import retry
+from decouple import AutoConfig
+from os import getcwd
 
 from nucosen import quote
 from nucosen.sessionCookie import Session
@@ -34,7 +36,10 @@ class RetryRequested(Exception):
     pass
 
 
+config = AutoConfig(getcwd())
 NetworkErrors = (HTTPError, ConnError, RetryRequested)
+UserAgent = str(config("NUCOSEN_UA_PREFIX", default="anonymous")
+                ) + " / NUCOSen Broadcast Personality System"
 
 
 def choiceFromRequests(requests: List[str], choicesNum: int) -> Optional[List[str]]:
@@ -54,36 +59,40 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
     _tags = tags.copy()
     url = "https://api.search.nicovideo.jp/api/v2/snapshot/video/contents/search"
     header = {
-        "UserAgent": "NUCOSen Broadcast Personality System"
+        "UserAgent": UserAgent
     }
     shuffle(_tags)
     tag = _tags.pop()
     offset = randint(0, 90)
+    minimumAllowableDuration = \
+        int(config("MIN_ALLOWABLE_DURATION", default=45))
+    maximumAllowableDuration = \
+        int(config("MAX_ALLOWABLE_DURATION", default=10 * 60))
+    if maximumAllowableDuration < minimumAllowableDuration:
+        maximumAllowableDuration = minimumAllowableDuration + (10 * 60)
     payload = {
         "q": tag,
         "targets": "tagsExact",
         "fields": "contentId",
-        "filters[lengthSeconds][gte]": 45,
-        "filters[lengthSeconds][lte]": 10 * 60,
+        "filters[lengthSeconds][gte]": minimumAllowableDuration,
+        "filters[lengthSeconds][lte]": maximumAllowableDuration,
         "_sort": "-lastCommentTime",
-        "_context": "NUCOSen backend",
+        "_context": UserAgent,
         "_limit": "30",
         "_offset": offset
     }
 
-    ngmovies = [
-        "sm30122129"
-    ]
+    ngVideos = str(config("NG_VIDEO_IDS",default="")).split(",")
 
     response = get(url, headers=header, params=payload)
     result = dict(response.json())
     # スナップショット検索が死んでいるときはテレビちゃんを休ませる
     if response.status_code == 503:
-        return "sm17759202"
+        return str(config("MAINTENANCE_VIDEO_ID", default="sm17759202"))
     response.raise_for_status()
     winners: List[str] = []
     for target in result['data']:
-        if not target["contentId"] in ngmovies:
+        if not target["contentId"] in ngVideos:
             winners.append(target['contentId'])
     shuffle(winners)
     if len(winners) == 0:
@@ -93,4 +102,3 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
             return winner
         getLogger(__name__).info("セレクションリジェクト {0}".format(winner))
     raise RetryRequested("V31 セレクション失敗 {0} {1}".format(tag, offset))
-

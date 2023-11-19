@@ -27,14 +27,16 @@ from requests.cookies import RequestsCookieJar
 from requests.exceptions import ConnectionError as ConnError
 from requests.exceptions import HTTPError
 from retry import retry
-
+from decouple import AutoConfig
+from os import getcwd
 
 class ReLoginRequested(Exception):
     pass
 
-
+config = AutoConfig(getcwd())
 NetworkErrors = (ConnError, HTTPError, ReLoginRequested)
-
+UserAgent = str(config("NUCOSEN_UA_PREFIX", default="anonymous")
+                ) + " / NUCOSen Automatic Login"
 
 @dataclass
 class Session(object):
@@ -42,7 +44,7 @@ class Session(object):
     password: str
     mfa_token: str
 
-    user_agent: str = "NUCOSen Automatic Login"
+    user_agent: str = UserAgent
     cookie: Optional[RequestsCookieJar] = None
 
     @retry(NetworkErrors, tries=3, delay=1, backoff=2, logger=getLogger(__name__ + ".login"))
