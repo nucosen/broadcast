@@ -42,7 +42,7 @@ setup(
     python_requires='>=3.10, <4',
     install_requires=open(
         "requirements.txt",
-        encoding="utf-8"
+        encoding="utf-16"
     ).read().splitlines(),
     entry_points={
         'console_scripts': [

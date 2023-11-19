@@ -99,6 +99,8 @@ def generateLiveDict(category: str, communityId: str, tags: List[str]):
     tagDicts = []
     for tag in tags:
         tagDicts.append({"label": tag, "isLocked": True})
+    # TODO - Trueではなく"true"とするべき？
+    #        quote.py isSoundOnlyは"true"でないと機能しない
     return {
         "title": "{0}".format(category),
         # NOTE - For users who will modify this text:
@@ -123,9 +125,11 @@ def generateLiveDict(category: str, communityId: str, tags: List[str]):
         "isTagOwnerLock": True,
         "isMemberOnly": False,
         "isTimeshiftEnabled":
-        False if not config("NUCOSEN_TIMESHIFT_ENABLED", default=False) else True,
+        False if not config("NUCOSEN_TIMESHIFT_ENABLED",
+                            default=False) else True,
         "isUadEnabled":
-        True if not config("NUCOSEN_USER_AD_DISABLED", default=False) else False,
+        True if not config("NUCOSEN_USER_AD_DISABLED",
+                           default=False) else False,
         "isAutoCommentFilterEnabled": False,
         "maxQuality": "1Mbps450p",
         "rightsItems": [],
@@ -152,7 +156,7 @@ def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int
         session.login()
         raise ReLoggedIn("L03 ログインセッション更新")
     if response.status_code == 400 \
-    and responseMeta.get("errorCode", "") == "OVERLAP_MAINTENANCE":
+            and responseMeta.get("errorCode", "") == "OVERLAP_MAINTENANCE":
         return response
     if response.status_code > 399:
         getLogger(__name__).info("枠予約失敗 : {0}".format(response.text))
@@ -225,7 +229,7 @@ def reserveLiveToGetOverMaintenance(liveDict: Dict[Any, Any], defaultStartTime: 
 def reserveLive(title: str, communityId: str, tags: List[str], session: Session) -> None:
     liveDict = generateLiveDict(title, communityId, tags)
     startTime = getStartTimeOfNextLive()
-    duration = 360
+    duration: int = config("DURATION_OVERWRITE", default=360, cast=int)
 
     response = takeReservation(liveDict, startTime, duration, session)
     responseJson: dict = response.json()
