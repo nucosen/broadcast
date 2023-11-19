@@ -90,7 +90,7 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
     result = dict(response.json())
     # スナップショット検索が死んでいるときはテレビちゃんを休ませる
     if response.status_code == 503:
-        return "sm17759202"
+        return str(config("MAINTENANCE_VIDEO_ID", default="sm17759202"))
     response.raise_for_status()
     winners: List[str] = []
     for target in result['data']:
