@@ -29,7 +29,7 @@ class DiscordHandler(logging.StreamHandler):
         super().__init__()
         config = AutoConfig(search_path=getcwd())
         self.url: str = str(
-            config("LOGGING_DISCORD_WEBHOOK", "BAD_URL")
+            config("LOGGING_DISCORD_WEBHOOK", default="BAD_URL")
         )
         if self.url == "BAD_URL":
             raise Exception(

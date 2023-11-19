@@ -150,8 +150,8 @@ def run():
                 if datetime.now(timezone.utc) + videoInfo[1] > currentLiveEnd - timedelta(minutes=1):
                     logger.info("引用アボート: 時間内に引用が終了しない見込みです")
                     database.priorityEnqueue(nextVideoId)
-                    quote.loop(currentLiveId, config(
-                        "CLOSING_VIDEO_ID"), session)
+                    quote.loop(
+                        currentLiveId, SPECIFIC_VIDEO_IDS[CLOSING], session)
                     live.showMessage(
                         currentLiveId,
                         config("NUCOSEN_CLOSING_MESSAGE") or
