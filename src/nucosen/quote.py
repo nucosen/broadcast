@@ -42,7 +42,22 @@ class RetryRequired(Exception):
     pass
 
 
+config = AutoConfig(getcwd())
 NetworkErrors = (HTTPError, ConnError, ReLoggedIn, RetryRequired)
+sourceList = \
+    ("quote", "self") if bool(config("QUOTE_MAIN", default=False)) \
+    else ("self", "quote")
+layoutSettings = {
+    "main": {
+        "source": sourceList[0],
+        "volume": float(config("MAIN_VOLUME", default=0.5))
+    },
+    "sub": {
+        "source": sourceList[1],
+        "volume": float(config("SUB_VOLUME", default=0.5)),
+        "isSoundOnly": bool(config("SUB_SOUND_ONLY", default=False))
+    }
+}
 
 
 @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".getCurrent"))
@@ -138,17 +153,7 @@ def once(liveId: str, videoId: str, session: Session) -> timedelta:
 
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation"
     payload = {
-        "layout": {
-            "main": {
-                "source": "quote",
-                "volume": 0.5
-            },
-            "sub": {
-                "source": "self",
-                "volume": 0.5,
-                "isSoundOnly": True
-            }
-        },
+        "layout": layoutSettings,
         "contents": [
             {
                 "id": videoId,
@@ -195,17 +200,7 @@ def setLoop(liveId: str, session: Session):
     sleep(1)
     url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation/layout"
     payload = {
-        "layout": {
-            "main": {
-                "source": "quote",
-                "volume": 0.5
-            },
-            "sub": {
-                "source": "self",
-                "volume": 0.5,
-                "isSoundOnly": False
-            }
-        },
+        "layout": layoutSettings,
         "repeat": True
     }
     resp = patch(url.format(liveId), json=payload, cookies=session.cookie)
