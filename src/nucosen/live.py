@@ -153,7 +153,6 @@ def takeReservation(liveDict: Dict[Any, Any], startTime: datetime, duration: int
         raise ReLoggedIn("L03 ログインセッション更新")
     if response.status_code == 400 \
     and responseMeta.get("errorCode", "") == "OVERLAP_MAINTENANCE":
-        # TODO メンテ以外の400リクエストを除外
         return response
     if response.status_code > 399:
         getLogger(__name__).info("枠予約失敗 : {0}".format(response.text))

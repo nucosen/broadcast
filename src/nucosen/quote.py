@@ -17,7 +17,6 @@ You should have received a copy of the GNU Affero General Public License
 along with NUCOSen Broadcast.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pprint import pprint
 from decouple import AutoConfig
 from os import getcwd
 from datetime import timedelta
