@@ -17,6 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 along with NUCOSen Broadcast.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from pprint import pprint
 from decouple import AutoConfig
 from os import getcwd
 from datetime import timedelta
@@ -55,10 +56,9 @@ layoutSettings = {
     "sub": {
         "source": sourceList[1],
         "volume": float(config("SUB_VOLUME", default=0.5)),
-        "isSoundOnly": bool(config("SUB_SOUND_ONLY", default=False))
+        "isSoundOnly": str(bool(config("SUB_SOUND_ONLY", default=False))).lower()
     }
 }
-
 
 @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".getCurrent"))
 def getCurrent(liveId: str, session: Session) -> Optional[str]:
