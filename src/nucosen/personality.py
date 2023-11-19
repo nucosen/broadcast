@@ -82,7 +82,7 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
         "_offset": offset
     }
 
-    ngmovies = [
+    ngVideos = [
         "sm30122129"
     ]
 
@@ -94,7 +94,7 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
     response.raise_for_status()
     winners: List[str] = []
     for target in result['data']:
-        if not target["contentId"] in ngmovies:
+        if not target["contentId"] in ngVideos:
             winners.append(target['contentId'])
     shuffle(winners)
     if len(winners) == 0:
