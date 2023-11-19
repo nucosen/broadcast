@@ -82,9 +82,7 @@ def randomSelection(tags: List[str], session: Session, ngTags: set) -> str:
         "_offset": offset
     }
 
-    ngVideos = [
-        "sm30122129"
-    ]
+    ngVideos = str(config("NG_VIDEO_IDS",default="")).split(",")
 
     response = get(url, headers=header, params=payload)
     result = dict(response.json())
