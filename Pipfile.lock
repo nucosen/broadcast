@@ -67,11 +67,12 @@
         },
         "pyotp": {
             "hashes": [
-                "sha256:9d144de0f8a601d6869abe1409f4a3f75f097c37b50a36a3bf165810a6e23f28",
-                "sha256:d28ddfd40e0c1b6a6b9da961c7d47a10261fb58f378cb00f05ce88b26df9c432"
+                "sha256:346b6642e0dbdde3b4ff5a930b664ca82abfa116356ed48cc42c7d6590d36f63",
+                "sha256:81c2e5865b8ac55e825b0358e496e1d9387c811e85bb40e71a3b29b288963612"
             ],
             "index": "pypi",
-            "version": "==2.6.0"
+            "markers": "python_version >= '3.7'",
+            "version": "==2.9.0"
         },
         "python-decouple": {
             "hashes": [
