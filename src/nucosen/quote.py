@@ -58,10 +58,14 @@ layoutSettings = {
         "isSoundOnly": str(bool(config("SUB_SOUND_ONLY", default=False))).lower()
     }
 }
+quoteBotUri = \
+    "https://lapi.spi.nicovideo.jp/v1/services/quotation/contents/{0}/bots" \
+    if config("USE_OLD_QUOTE_BOT",default=False) else \
+    "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation"
 
 @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".getCurrent"))
 def getCurrent(liveId: str, session: Session) -> Optional[str]:
-    url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation"
+    url = quoteBotUri
     resp = get(url.format(liveId), cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
@@ -76,7 +80,7 @@ def getCurrent(liveId: str, session: Session) -> Optional[str]:
 
 @retry(NetworkErrors, tries=5, delay=1, backoff=2, logger=getLogger(__name__ + ".stop"))
 def stop(liveId: str, session: Session):
-    url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation"
+    url = quoteBotUri
     resp = delete(url.format(liveId), cookies=session.cookie)
     if resp.status_code == 403:
         session.login()
@@ -150,7 +154,7 @@ def getVideoInfo(videoId: str, session: Session, ngTags: set) -> Tuple[bool, tim
 def once(liveId: str, videoId: str, session: Session) -> timedelta:
     stop(liveId, session)
 
-    url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation"
+    url = quoteBotUri
     payload = {
         "layout": layoutSettings,
         "contents": [
@@ -197,7 +201,7 @@ def loop(liveId: str, videoId: str, session: Session):
 @retry(NetworkErrors, tries=10, delay=1, backoff=2, logger=getLogger(__name__ + ".setLoop"))
 def setLoop(liveId: str, session: Session):
     sleep(1)
-    url = "https://lapi.spi.nicovideo.jp/v1/tools/live/contents/{0}/quotation/layout"
+    url = quoteBotUri + "/layout"
     payload = {
         "layout": layoutSettings,
         "repeat": True
