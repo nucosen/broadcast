@@ -3,7 +3,7 @@ name: Feature request
 about: 機能のリクエスト
 title: ''
 labels: p3:新機能
-assignees: '@sitting-cat'
+assignees: sitting-cat
 
 ---
 
